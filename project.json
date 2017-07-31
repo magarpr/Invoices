@@ -1,0 +1,12 @@
+{
+  "description": "Send invoices to customers",
+  "version": "2016.2.6344.28632",
+  "main": "Main.xaml",
+  "id": "Invoices",
+  "dependencies": {},
+  "configurationOptions": {},
+  "excludedData": [
+    "Private:*",
+    "*password*"
+  ]
+}
