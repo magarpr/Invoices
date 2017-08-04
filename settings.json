@@ -1,3 +1,9 @@
 {
-	"mailAccount": "Sarunas.Gerve@atea.lt"
+	"mailAccount": "Martynas.Ulinskas@atea.lt",
+	"mailFolder": "Inbox",
+	"emailHasError": "Martynas.Ulinskas@atea.lt",
+	"emailNoInSequesce": "Martynas.Ulinskas@atea.lt",
+	"invoiceLow": "100000000",
+	"invoiceHight": "100000009",
+	"excelFilePath": "Approvedemail.xlsx"
 }
