@@ -3,7 +3,18 @@
 	"mailFolder": "Inbox",
 	"emailHasError": "Sarunas.Gerve@atea.lt",
 	"emailNotInSequence": "Sarunas.Gerve@atea.lt",
+	"emailHasValidError": "Sarunas.Gerve@atea.lt",
 	"invoiceLowRange": "100",
 	"invoiceHighRange": "101",
-	"excelFilePath": "Approvedemail.xlsx"
+	"excelFilePath": "Approvedemail.xlsx",
+	"sapServer": "Test",
+	"sapUser": "User",
+	"sapPassword": "Pass",
+	"sapPrinter": "Local windows printer",
+	"sapPrinterSearchName": "local",
+	"sapPDFFolder": "C:\\Users\\kermit\\Documents\\UiPath\\Invoices\\Invoices",
+	"processedMailFolder": "Processed",
+	"errorMailFolder": "Forwarded",
+	"errorMailAccount": "Sarunas.Gerve@atea.lt",
+	"errorMailCC": "Sarunas.Gerve@atea.lt"
 }
