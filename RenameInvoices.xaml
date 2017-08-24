@@ -41,6 +41,7 @@
       <x:String>UiPath.Core</x:String>
       <x:String>UiPath.Core.Activities</x:String>
       <x:String>System.Windows.Markup</x:String>
+      <x:String>System.Text.RegularExpressions</x:String>
     </sco:Collection>
   </TextExpression.NamespacesForImplementation>
   <TextExpression.ReferencesForImplementation>
@@ -95,42 +96,80 @@
                 <Variable x:TypeArguments="x:String" Name="pdfText" />
               </Sequence.Variables>
               <ui:ReadPDFText DisplayName="Read PDF text" FileName="[item]" sap2010:WorkflowViewState.IdRef="ReadPDFText_2" Range="1" Text="[pdfText]" />
-              <Sequence sap2010:Annotation.AnnotationText="Get InvoiceNo from PDF" DisplayName="Get InvoiceNo" sap2010:WorkflowViewState.IdRef="Sequence_154">
-                <Assign sap2010:WorkflowViewState.IdRef="Assign_4">
-                  <Assign.To>
-                    <OutArgument x:TypeArguments="x:String">[invoiceNo]</OutArgument>
-                  </Assign.To>
-                  <Assign.Value>
-                    <InArgument x:TypeArguments="x:String">[pdfText.Substring(pdfText.IndexOf("FAKTURA") + 7).Trim]</InArgument>
-                  </Assign.Value>
-                </Assign>
-                <Assign sap2010:WorkflowViewState.IdRef="Assign_6">
-                  <Assign.To>
-                    <OutArgument x:TypeArguments="x:String">[invoiceNo]</OutArgument>
-                  </Assign.To>
-                  <Assign.Value>
-                    <InArgument x:TypeArguments="x:String">[invoiceNo.Substring(0, invoiceNo.IndexOf(Environment.NewLine)).Trim]</InArgument>
-                  </Assign.Value>
-                </Assign>
-              </Sequence>
-              <Sequence sap2010:Annotation.AnnotationText="Get CustomerNO from PDF" DisplayName="Get CustomerNo" sap2010:WorkflowViewState.IdRef="Sequence_157">
-                <Assign sap2010:WorkflowViewState.IdRef="Assign_7">
-                  <Assign.To>
-                    <OutArgument x:TypeArguments="x:String">[customerNo]</OutArgument>
-                  </Assign.To>
-                  <Assign.Value>
-                    <InArgument x:TypeArguments="x:String">[pdfText.Substring(pdfText.IndexOf("Fakturakonto:") + 13).Trim]</InArgument>
-                  </Assign.Value>
-                </Assign>
-                <Assign sap2010:WorkflowViewState.IdRef="Assign_8">
-                  <Assign.To>
-                    <OutArgument x:TypeArguments="x:String">[CustomerNo]</OutArgument>
-                  </Assign.To>
-                  <Assign.Value>
-                    <InArgument x:TypeArguments="x:String">[customerNo.Substring(0, customerNo.IndexOf(Environment.NewLine)).Trim]</InArgument>
-                  </Assign.Value>
-                </Assign>
-              </Sequence>
+              <If sap2010:Annotation.AnnotationText="Check if invoice PDF is in English or Norwegian" Condition="[pdfText.Contains(&quot;Invoice&quot;)]" sap2010:WorkflowViewState.IdRef="If_1">
+                <If.Then>
+                  <Sequence sap2010:WorkflowViewState.IdRef="Sequence_160">
+                    <Sequence sap2010:Annotation.AnnotationText="Get InvoiceNo from PDF" DisplayName="Get InvoiceNo" sap2010:WorkflowViewState.IdRef="Sequence_158">
+                      <Assign sap2010:Annotation.AnnotationText="Regexp to get Number after Invoice string" sap2010:WorkflowViewState.IdRef="Assign_10">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="x:String">[invoiceNo]</OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="x:String">[Regex.Match(pdfText, "(?&lt;=\bInvoice\s+)\d+").Value]</InArgument>
+                        </Assign.Value>
+                      </Assign>
+                    </Sequence>
+                    <Sequence sap2010:Annotation.AnnotationText="Get CustomerNO from PDF" DisplayName="Get CustomerNo" sap2010:WorkflowViewState.IdRef="Sequence_159">
+                      <Assign sap2010:WorkflowViewState.IdRef="Assign_11">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="x:String">[customerNo]</OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="x:String">[pdfText.Substring(pdfText.IndexOf("Invoice account:") + 16).Trim]</InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign sap2010:WorkflowViewState.IdRef="Assign_12">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="x:String">[CustomerNo]</OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="x:String">[customerNo.Substring(0, customerNo.IndexOf(Environment.NewLine)).Trim]</InArgument>
+                        </Assign.Value>
+                      </Assign>
+                    </Sequence>
+                  </Sequence>
+                </If.Then>
+                <If.Else>
+                  <Sequence sap2010:WorkflowViewState.IdRef="Sequence_161">
+                    <Sequence sap2010:Annotation.AnnotationText="Get InvoiceNo from PDF" DisplayName="Get InvoiceNo" sap2010:WorkflowViewState.IdRef="Sequence_154">
+                      <Assign sap2010:WorkflowViewState.IdRef="Assign_4">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="x:String">[invoiceNo]</OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="x:String">[pdfText.Substring(pdfText.IndexOf("FAKTURA") + 7).Trim]</InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign sap2010:WorkflowViewState.IdRef="Assign_6">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="x:String">[invoiceNo]</OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="x:String">[invoiceNo.Substring(0, invoiceNo.IndexOf(Environment.NewLine)).Trim]</InArgument>
+                        </Assign.Value>
+                      </Assign>
+                    </Sequence>
+                    <Sequence sap2010:Annotation.AnnotationText="Get CustomerNO from PDF" DisplayName="Get CustomerNo" sap2010:WorkflowViewState.IdRef="Sequence_157">
+                      <Assign sap2010:WorkflowViewState.IdRef="Assign_7">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="x:String">[customerNo]</OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="x:String">[pdfText.Substring(pdfText.IndexOf("Fakturakonto:") + 13).Trim]</InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign sap2010:WorkflowViewState.IdRef="Assign_8">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="x:String">[CustomerNo]</OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="x:String">[customerNo.Substring(0, customerNo.IndexOf(Environment.NewLine)).Trim]</InArgument>
+                        </Assign.Value>
+                      </Assign>
+                    </Sequence>
+                  </Sequence>
+                </If.Else>
+              </If>
             </Sequence>
             <ui:MoveFile ContinueOnError="{x:Null}" Destination="[String.Format(&quot;{0}\[{1}].[{2}].pdf&quot;, PDFFolder, invoiceNo, customerNo)]" DisplayName="Rename PDF File" sap2010:WorkflowViewState.IdRef="MoveFile_1" Overwrite="False" Path="[item]" />
             <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_1" Text="[String.Format(&quot;Renaming invoice file from {0} to [{1}].[{2}].pdf{3}&quot;,  item.Split(&quot;\&quot;c).Last(),  invoiceNo, customerNo, Environment.NewLine)]" />
@@ -139,16 +178,50 @@
       </ui:ForEach.Body>
     </ui:ForEach>
     <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_3" Text="Finished renaming invoices" />
-    <sads:DebugSymbol.Symbol>dz1DOlxVc2Vyc1xrZXJtaXRcRG9jdW1lbnRzXFVpUGF0aFxJbnZvaWNlc1xSZW5hbWVJbnZvaWNlcy54YW1sJQFiAYQBAQJFA48BDgIBAUkFSXoCATNKBVEOAgEvUgWMARICAQSNAQWNAXsCAQJJXEl3AgE0TzJPWgIBMkwzTDoCATBSeFKBAQIBLVgLiQEWAgEFjQFcjQF4AgEDWzxbQgIBBl0NhgEYAgEQhwENhwGDAgIBCYgBDYgBiwICAQdhD2GaAQIBJ2IPcxoCARx0D4UBGgIBEYcBQYcBlQECAQyHAfgBhwGAAgIBCogBZIgBiAICAQhhjAFhlwECASthRGFMAgEpYYMBYYYBAgEoYxFqGgIBIWsRchoCAR11EXwaAgEWfRGEARoCARJoPGh0AgEkZT1lSAIBInA8cIEBAgEgbT1tSAIBHno8ensCARl3PXdJAgEXggE8ggGDAQIBFX89f0kCARM=</sads:DebugSymbol.Symbol>
+    <sads:DebugSymbol.Symbol>dz1DOlxVc2Vyc1xrZXJtaXRcRG9jdW1lbnRzXFVpUGF0aFxJbnZvaWNlc1xSZW5hbWVJbnZvaWNlcy54YW1sNAFiAYQBAQJGA7YBDgIBAUoFSnoCAUhLBVIOAgFEUwWzARICAQS0AQW0AXsCAQJKXEp3AgFJUDJQWgIBR00zTToCAUVTeFOBAQIBQlkLsAEWAgEFtAFctAF4AgEDXDxcQgIBBl4NrQEYAgEQrgENrgGDAgIBCa8BDa8BiwICAQdiD2KaAQIBPGMPrAEUAgERrgFBrgGVAQIBDK4B+AGuAYACAgEKrwFkrwGIAgIBCGKMAWKXAQIBQGJEYkwCAT5igwFihgECAT1jcWOaAQIBEmUTggEeAgErhQETqgEeAgEUZhVvIAIBN3AVgQEgAgEshgEVlwEgAgEgmAEVqQEgAgEVZxduIAIBOHEXeCACATF5F4ABIAIBLYcBF44BIAIBJY8BF5YBIAIBIZkBF6ABIAIBGqEBF6gBIAIBFmxCbHkCATtpQ2lOAgE5dkJ2hAECATRzQ3NPAgEyfkJ+iQECATB7Q3tPAgEujAFCjAF6AgEoiQFDiQFOAgEmlAFClAGHAQIBJJEBQ5EBTgIBIp4BQp4BgQECAR2bAUObAU8CARumAUKmAYkBAgEZowFDowFPAgEX</sads:DebugSymbol.Symbol>
   </Sequence>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
       <sap2010:ViewStateData Id="WriteLine_2" sap:VirtualizedContainerService.HintSize="287,61" />
       <sap2010:ViewStateData Id="Assign_1" sap:VirtualizedContainerService.HintSize="287,60" />
-      <sap2010:ViewStateData Id="ReadPDFText_2" sap:VirtualizedContainerService.HintSize="314,60" />
+      <sap2010:ViewStateData Id="ReadPDFText_2" sap:VirtualizedContainerService.HintSize="469,60" />
+      <sap2010:ViewStateData Id="Assign_10" sap:VirtualizedContainerService.HintSize="242,102">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Sequence_158" sap:VirtualizedContainerService.HintSize="200,78">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Assign_11" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_12" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Sequence_159" sap:VirtualizedContainerService.HintSize="200,78">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Sequence_160" sap:VirtualizedContainerService.HintSize="222,320">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="Assign_4" sap:VirtualizedContainerService.HintSize="242,60" />
       <sap2010:ViewStateData Id="Assign_6" sap:VirtualizedContainerService.HintSize="242,60" />
-      <sap2010:ViewStateData Id="Sequence_154" sap:VirtualizedContainerService.HintSize="314,78">
+      <sap2010:ViewStateData Id="Sequence_154" sap:VirtualizedContainerService.HintSize="200,78">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -159,7 +232,7 @@
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="Assign_7" sap:VirtualizedContainerService.HintSize="242,60" />
       <sap2010:ViewStateData Id="Assign_8" sap:VirtualizedContainerService.HintSize="242,60" />
-      <sap2010:ViewStateData Id="Sequence_157" sap:VirtualizedContainerService.HintSize="264,311">
+      <sap2010:ViewStateData Id="Sequence_157" sap:VirtualizedContainerService.HintSize="200,78">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -168,7 +241,21 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Sequence_150" sap:VirtualizedContainerService.HintSize="336,462">
+      <sap2010:ViewStateData Id="Sequence_161" sap:VirtualizedContainerService.HintSize="222,320">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="If_1" sap:VirtualizedContainerService.HintSize="469,495">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Sequence_150" sap:VirtualizedContainerService.HintSize="491,746">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
