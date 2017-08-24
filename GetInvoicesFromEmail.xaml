@@ -3,17 +3,17 @@
  xmlns:av="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
  xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
- xmlns:s="clr-namespace:System;assembly=mscorlib"
  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
  xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
  xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
  xmlns:snm="clr-namespace:System.Net.Mail;assembly=System"
+ xmlns:str="clr-namespace:System.Text.RegularExpressions;assembly=System"
  xmlns:ui="http://schemas.uipath.com/workflow/activities"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <x:Members>
-    <x:Property Name="Email" Type="InArgument(snm:MailMessage)" />
+    <x:Property Name="Email" Type="InOutArgument(snm:MailMessage)" />
     <x:Property Name="ToEmailAddress" Type="OutArgument(x:String)" />
     <x:Property Name="InvoicesString" Type="OutArgument(x:String)" />
     <x:Property Name="InvoicesList" Type="OutArgument(scg:List(x:Int64))" />
@@ -81,150 +81,230 @@
       <FlowStep x:Name="__ReferenceID9" sap2010:WorkflowViewState.IdRef="FlowStep_10">
         <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_1" Text="Started getting invoices from email" />
         <FlowStep.Next>
-          <FlowStep x:Name="__ReferenceID0" sap2010:WorkflowViewState.IdRef="FlowStep_1">
-            <Assign sap2010:Annotation.AnnotationText="takes email' body from email' message" sap2010:WorkflowViewState.IdRef="Assign_1">
-              <Assign.To>
-                <OutArgument x:TypeArguments="x:String">[body]</OutArgument>
-              </Assign.To>
-              <Assign.Value>
-                <InArgument x:TypeArguments="x:String">[Email.Body]</InArgument>
-              </Assign.Value>
-            </Assign>
+          <FlowStep x:Name="__ReferenceID11" sap2010:WorkflowViewState.IdRef="FlowStep_12">
+            <Sequence sap2010:Annotation.AnnotationText="Get ToEmail email address" DisplayName="Remove unnecessary email fields" sap2010:WorkflowViewState.IdRef="Sequence_6">
+              <Sequence.Variables>
+                <Variable x:TypeArguments="x:Int32" Name="emailStarts" />
+                <Variable x:TypeArguments="x:Int32" Name="emailEnds" />
+              </Sequence.Variables>
+              <If sap2010:Annotation.AnnotationText="Remove tracker info" Condition="[Email.Body.IndexOf(&quot;&lt;https://mandrillapp.com&quot;) &gt; 0]" sap2010:WorkflowViewState.IdRef="If_5">
+                <If.Then>
+                  <Assign sap2010:WorkflowViewState.IdRef="Assign_28">
+                    <Assign.To>
+                      <OutArgument x:TypeArguments="x:String">[Email.Body]</OutArgument>
+                    </Assign.To>
+                    <Assign.Value>
+                      <InArgument x:TypeArguments="x:String">[Email.Body.Replace(Email.Body.Substring(Email.Body.IndexOf("&lt;https://mandrillapp.com")), "")]</InArgument>
+                    </Assign.Value>
+                  </Assign>
+                </If.Then>
+              </If>
+            </Sequence>
             <FlowStep.Next>
-              <FlowDecision x:Name="__ReferenceID3" sap2010:Annotation.AnnotationText="Check if mail body has a correct structure" Condition="[body.Contains(&quot;E-post&quot;) AND body.Contains(&quot;Fakturanummer&quot;)]" DisplayName="Body structure correct?" sap2010:WorkflowViewState.IdRef="FlowDecision_1">
-                <FlowDecision.True>
-                  <FlowStep x:Name="__ReferenceID2" sap2010:WorkflowViewState.IdRef="FlowStep_3">
-                    <Sequence sap2010:Annotation.AnnotationText="Get ToEmail email address" DisplayName="Get email address" sap2010:WorkflowViewState.IdRef="Sequence_1">
-                      <Sequence.Variables>
-                        <Variable x:TypeArguments="x:Int32" Name="emailStarts" />
-                        <Variable x:TypeArguments="x:Int32" Name="emailEnds" />
-                      </Sequence.Variables>
-                      <If sap2010:Annotation.AnnotationText="Remove tracker info" Condition="[body.IndexOf(&quot;&lt;https://mandrillapp.com&quot;) &gt; 0]" sap2010:WorkflowViewState.IdRef="If_2">
-                        <If.Then>
-                          <Assign sap2010:WorkflowViewState.IdRef="Assign_11">
+              <FlowStep x:Name="__ReferenceID0" sap2010:WorkflowViewState.IdRef="FlowStep_1">
+                <Assign sap2010:Annotation.AnnotationText="takes email' body from email' message" sap2010:WorkflowViewState.IdRef="Assign_1">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[body]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[Email.Body]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <FlowStep.Next>
+                  <FlowDecision x:Name="__ReferenceID3" sap2010:Annotation.AnnotationText="Check if mail body has a correct structure" Condition="[body.Contains(&quot;E-post&quot;) AND body.Contains(&quot;Fakturanummer&quot;)]" DisplayName="Body structure correct?" sap2010:WorkflowViewState.IdRef="FlowDecision_1">
+                    <FlowDecision.True>
+                      <FlowStep x:Name="__ReferenceID2" sap2010:WorkflowViewState.IdRef="FlowStep_3">
+                        <Sequence sap2010:Annotation.AnnotationText="Get ToEmail email address" DisplayName="Get email address" sap2010:WorkflowViewState.IdRef="Sequence_1">
+                          <Sequence.Variables>
+                            <Variable x:TypeArguments="x:Int32" Name="emailStarts" />
+                            <Variable x:TypeArguments="x:Int32" Name="emailEnds" />
+                          </Sequence.Variables>
+                          <Assign sap2010:WorkflowViewState.IdRef="Assign_12">
                             <Assign.To>
-                              <OutArgument x:TypeArguments="x:String">[body]</OutArgument>
+                              <OutArgument x:TypeArguments="x:Int32">[emailStarts]</OutArgument>
                             </Assign.To>
                             <Assign.Value>
-                              <InArgument x:TypeArguments="x:String">[body.Replace(body.Substring(body.IndexOf("&lt;https://mandrillapp.com")), "")]</InArgument>
+                              <InArgument x:TypeArguments="x:Int32">[body.LastIndexOf("E-post") + 6]</InArgument>
                             </Assign.Value>
                           </Assign>
-                        </If.Then>
-                      </If>
-                      <Assign sap2010:WorkflowViewState.IdRef="Assign_12">
-                        <Assign.To>
-                          <OutArgument x:TypeArguments="x:Int32">[emailStarts]</OutArgument>
-                        </Assign.To>
-                        <Assign.Value>
-                          <InArgument x:TypeArguments="x:Int32">[body.LastIndexOf("E-post") + 6]</InArgument>
-                        </Assign.Value>
-                      </Assign>
-                      <Assign sap2010:WorkflowViewState.IdRef="Assign_13">
-                        <Assign.To>
-                          <OutArgument x:TypeArguments="x:Int32">[emailEnds]</OutArgument>
-                        </Assign.To>
-                        <Assign.Value>
-                          <InArgument x:TypeArguments="x:Int32">[body.LastIndexOf("Fakturanummer")]</InArgument>
-                        </Assign.Value>
-                      </Assign>
-                      <Assign sap2010:WorkflowViewState.IdRef="Assign_14">
-                        <Assign.To>
-                          <OutArgument x:TypeArguments="x:String">[ToEmailAddress]</OutArgument>
-                        </Assign.To>
-                        <Assign.Value>
-                          <InArgument x:TypeArguments="x:String">[body.Substring(emailStarts, emailEnds - emailStarts).Trim]</InArgument>
-                        </Assign.Value>
-                      </Assign>
-                    </Sequence>
-                    <FlowStep.Next>
-                      <FlowDecision x:Name="__ReferenceID5" sap2010:Annotation.AnnotationText="Check if email address has a correct structure" Condition="[Regex.Match(ToEmailAddress, &quot;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$&quot;).Success]" DisplayName="Correct email address?" sap2010:WorkflowViewState.IdRef="FlowDecision_2">
-                        <FlowDecision.True>
-                          <FlowStep x:Name="__ReferenceID1" sap2010:WorkflowViewState.IdRef="FlowStep_2">
-                            <Sequence sap2010:Annotation.AnnotationText="Get invoices from email body" DisplayName="Get invoices" sap2010:WorkflowViewState.IdRef="Sequence_2">
-                              <Sequence.Variables>
-                                <Variable x:TypeArguments="x:Int32" Name="invoiceStart" />
-                                <Variable x:TypeArguments="s:String[]" Name="invoiceNumbersInString" />
-                              </Sequence.Variables>
-                              <Assign sap2010:WorkflowViewState.IdRef="Assign_15">
-                                <Assign.To>
-                                  <OutArgument x:TypeArguments="x:Int32">[invoiceStart]</OutArgument>
-                                </Assign.To>
-                                <Assign.Value>
-                                  <InArgument x:TypeArguments="x:Int32">[body.IndexOf("Fakturanummer") + 13]</InArgument>
-                                </Assign.Value>
-                              </Assign>
-                              <Assign sap2010:WorkflowViewState.IdRef="Assign_16">
-                                <Assign.To>
-                                  <OutArgument x:TypeArguments="x:String">[InvoicesString]</OutArgument>
-                                </Assign.To>
-                                <Assign.Value>
-                                  <InArgument x:TypeArguments="x:String">[body.Substring(invoiceStart)]</InArgument>
-                                </Assign.Value>
-                              </Assign>
-                              <Assign sap2010:WorkflowViewState.IdRef="Assign_17">
-                                <Assign.To>
-                                  <OutArgument x:TypeArguments="s:String[]">[invoiceNumbersInString]</OutArgument>
-                                </Assign.To>
-                                <Assign.Value>
-                                  <InArgument x:TypeArguments="s:String[]">[InvoicesString.Split(New String() {Environment.NewLine, " ", ",", "."}, StringSplitOptions.RemoveEmptyEntries)]</InArgument>
-                                </Assign.Value>
-                              </Assign>
-                              <Assign sap2010:WorkflowViewState.IdRef="Assign_10">
-                                <Assign.To>
-                                  <OutArgument x:TypeArguments="scg:List(x:Int64)">[InvoicesList]</OutArgument>
-                                </Assign.To>
-                                <Assign.Value>
-                                  <InArgument x:TypeArguments="scg:List(x:Int64)">[new List(of Long)]</InArgument>
-                                </Assign.Value>
-                              </Assign>
-                              <ui:ForEach x:TypeArguments="x:String" DisplayName="For each" sap2010:WorkflowViewState.IdRef="ForEach`1_2" Values="[invoiceNumbersInString]">
-                                <ui:ForEach.Body>
-                                  <ActivityAction x:TypeArguments="x:String">
-                                    <ActivityAction.Argument>
-                                      <DelegateInArgument x:TypeArguments="x:String" Name="item" />
-                                    </ActivityAction.Argument>
-                                    <Sequence sap2010:WorkflowViewState.IdRef="Sequence_3">
-                                      <If Condition="[item.Trim &lt;&gt; &quot;&quot;]" DisplayName="If Not Empty String" sap2010:WorkflowViewState.IdRef="If_1">
-                                        <If.Then>
-                                          <AddToCollection x:TypeArguments="x:Int64" Collection="[InvoicesList]" DisplayName="Add to collection" sap2010:WorkflowViewState.IdRef="AddToCollection`1_1" Item="[Convert.ToInt64(item)]" />
-                                        </If.Then>
-                                      </If>
-                                    </Sequence>
-                                  </ActivityAction>
-                                </ui:ForEach.Body>
-                              </ui:ForEach>
-                            </Sequence>
-                            <FlowStep.Next>
-                              <FlowDecision x:Name="__ReferenceID7" sap2010:Annotation.AnnotationText="Check how many invoices are found in email body" Condition="[InvoicesList.Count() &gt; 0]" DisplayName="Invoices &gt; 0?" sap2010:WorkflowViewState.IdRef="FlowDecision_3">
-                                <FlowDecision.True>
-                                  <FlowStep x:Name="__ReferenceID10" sap2010:WorkflowViewState.IdRef="FlowStep_11">
-                                    <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_2" Text="Finished getting invoices from email" />
-                                  </FlowStep>
-                                </FlowDecision.True>
-                                <FlowDecision.False>
-                                  <FlowStep x:Name="__ReferenceID8" sap2010:WorkflowViewState.IdRef="FlowStep_9">
-                                    <Throw DisplayName="Throw Exception" Exception="[new Exception(&quot;No invoices are found in the email body&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_3" />
-                                  </FlowStep>
-                                </FlowDecision.False>
-                              </FlowDecision>
-                            </FlowStep.Next>
-                          </FlowStep>
-                        </FlowDecision.True>
-                        <FlowDecision.False>
-                          <FlowStep x:Name="__ReferenceID6" sap2010:WorkflowViewState.IdRef="FlowStep_8">
-                            <Throw DisplayName="Throw Exception" Exception="[new Exception(&quot;ToEmail address has invalid format&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_2" />
-                          </FlowStep>
-                        </FlowDecision.False>
-                      </FlowDecision>
-                    </FlowStep.Next>
-                  </FlowStep>
-                </FlowDecision.True>
-                <FlowDecision.False>
-                  <FlowStep x:Name="__ReferenceID4" sap2010:WorkflowViewState.IdRef="FlowStep_6">
-                    <Throw DisplayName="Throw Exception" Exception="[new Exception(&quot;Email does not have email address or it is not in valid format&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_1" />
-                  </FlowStep>
-                </FlowDecision.False>
-              </FlowDecision>
+                          <Assign sap2010:WorkflowViewState.IdRef="Assign_13">
+                            <Assign.To>
+                              <OutArgument x:TypeArguments="x:Int32">[emailEnds]</OutArgument>
+                            </Assign.To>
+                            <Assign.Value>
+                              <InArgument x:TypeArguments="x:Int32">[body.LastIndexOf("Fakturanummer")]</InArgument>
+                            </Assign.Value>
+                          </Assign>
+                          <Assign sap2010:WorkflowViewState.IdRef="Assign_14">
+                            <Assign.To>
+                              <OutArgument x:TypeArguments="x:String">[ToEmailAddress]</OutArgument>
+                            </Assign.To>
+                            <Assign.Value>
+                              <InArgument x:TypeArguments="x:String">[body.Substring(emailStarts, emailEnds - emailStarts).Trim]</InArgument>
+                            </Assign.Value>
+                          </Assign>
+                          <If sap2010:Annotation.AnnotationText="If found, remove mailto part in a string" Condition="[ToEmailAddress.Contains(&quot;&lt;mailto:&quot;)]" sap2010:WorkflowViewState.IdRef="If_3">
+                            <If.Then>
+                              <Sequence sap2010:WorkflowViewState.IdRef="Sequence_4">
+                                <Assign sap2010:WorkflowViewState.IdRef="Assign_19">
+                                  <Assign.To>
+                                    <OutArgument x:TypeArguments="x:Int32">[emailStarts]</OutArgument>
+                                  </Assign.To>
+                                  <Assign.Value>
+                                    <InArgument x:TypeArguments="x:Int32">[ToEmailAddress.LastIndexOf("&lt;mailto:")]</InArgument>
+                                  </Assign.Value>
+                                </Assign>
+                                <Assign sap2010:WorkflowViewState.IdRef="Assign_20">
+                                  <Assign.To>
+                                    <OutArgument x:TypeArguments="x:Int32">[emailEnds]</OutArgument>
+                                  </Assign.To>
+                                  <Assign.Value>
+                                    <InArgument x:TypeArguments="x:Int32">[ToEmailAddress.LastIndexOf("&gt;") + 1]</InArgument>
+                                  </Assign.Value>
+                                </Assign>
+                                <Assign sap2010:WorkflowViewState.IdRef="Assign_18">
+                                  <Assign.To>
+                                    <OutArgument x:TypeArguments="x:String">[ToEmailAddress]</OutArgument>
+                                  </Assign.To>
+                                  <Assign.Value>
+                                    <InArgument x:TypeArguments="x:String">[ToEmailAddress.Replace(ToEmailAddress.Substring(emailStarts, emailEnds - emailStarts).Trim, "").Trim]</InArgument>
+                                  </Assign.Value>
+                                </Assign>
+                              </Sequence>
+                            </If.Then>
+                          </If>
+                        </Sequence>
+                        <FlowStep.Next>
+                          <FlowDecision x:Name="__ReferenceID5" sap2010:Annotation.AnnotationText="Check if email address has a correct structure" Condition="[Regex.Match(ToEmailAddress, &quot;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$&quot;).Success]" DisplayName="Correct email address?" sap2010:WorkflowViewState.IdRef="FlowDecision_2">
+                            <FlowDecision.True>
+                              <FlowStep x:Name="__ReferenceID1" sap2010:WorkflowViewState.IdRef="FlowStep_2">
+                                <Sequence sap2010:Annotation.AnnotationText="Get invoices from email body" DisplayName="Get invoices" sap2010:WorkflowViewState.IdRef="Sequence_2">
+                                  <Sequence.Variables>
+                                    <Variable x:TypeArguments="x:Int32" Name="invoiceStart" />
+                                    <Variable x:TypeArguments="str:MatchCollection" Name="invoiceNumbersCollection" />
+                                  </Sequence.Variables>
+                                  <Assign sap2010:WorkflowViewState.IdRef="Assign_15">
+                                    <Assign.To>
+                                      <OutArgument x:TypeArguments="x:Int32">[invoiceStart]</OutArgument>
+                                    </Assign.To>
+                                    <Assign.Value>
+                                      <InArgument x:TypeArguments="x:Int32">[body.IndexOf("Fakturanummer") + 13]</InArgument>
+                                    </Assign.Value>
+                                  </Assign>
+                                  <Assign sap2010:WorkflowViewState.IdRef="Assign_23">
+                                    <Assign.To>
+                                      <OutArgument x:TypeArguments="x:String">[InvoicesString]</OutArgument>
+                                    </Assign.To>
+                                    <Assign.Value>
+                                      <InArgument x:TypeArguments="x:String">[body.Substring(invoiceStart)]</InArgument>
+                                    </Assign.Value>
+                                  </Assign>
+                                  <Assign sap2010:Annotation.AnnotationText="Get all invoice no with RegExp" sap2010:WorkflowViewState.IdRef="Assign_25">
+                                    <Assign.To>
+                                      <OutArgument x:TypeArguments="str:MatchCollection">[invoiceNumbersCollection]</OutArgument>
+                                    </Assign.To>
+                                    <Assign.Value>
+                                      <InArgument x:TypeArguments="str:MatchCollection">[Regex.Matches(InvoicesString, "[+-]?\d+(\.\d+)?")]</InArgument>
+                                    </Assign.Value>
+                                  </Assign>
+                                  <Assign sap2010:WorkflowViewState.IdRef="Assign_10">
+                                    <Assign.To>
+                                      <OutArgument x:TypeArguments="scg:List(x:Int64)">[InvoicesList]</OutArgument>
+                                    </Assign.To>
+                                    <Assign.Value>
+                                      <InArgument x:TypeArguments="scg:List(x:Int64)">[new List(of Long)]</InArgument>
+                                    </Assign.Value>
+                                  </Assign>
+                                  <Assign sap2010:Annotation.AnnotationText="Add to clipboard string" sap2010:WorkflowViewState.IdRef="Assign_24">
+                                    <Assign.To>
+                                      <OutArgument x:TypeArguments="x:String">[InvoicesString]</OutArgument>
+                                    </Assign.To>
+                                    <Assign.Value>
+                                      <InArgument x:TypeArguments="x:String">
+                                        <Literal x:TypeArguments="x:String" Value="" />
+                                      </InArgument>
+                                    </Assign.Value>
+                                  </Assign>
+                                  <ui:ForEach x:TypeArguments="str:Match" DisplayName="For each" sap2010:WorkflowViewState.IdRef="ForEach`1_3" Values="[invoiceNumbersCollection]">
+                                    <ui:ForEach.Body>
+                                      <ActivityAction x:TypeArguments="str:Match">
+                                        <ActivityAction.Argument>
+                                          <DelegateInArgument x:TypeArguments="str:Match" Name="item" />
+                                        </ActivityAction.Argument>
+                                        <Sequence sap2010:WorkflowViewState.IdRef="Sequence_3">
+                                          <Sequence.Variables>
+                                            <Variable x:TypeArguments="x:String" Name="invoiceNo" />
+                                            <Variable x:TypeArguments="x:Int32" Default="9" Name="invoiceLength" />
+                                          </Sequence.Variables>
+                                          <If sap2010:Annotation.AnnotationText="Remove Kid number symbol if found" Condition="[item.Value.Length &gt; invoiceLength]" sap2010:WorkflowViewState.IdRef="If_4">
+                                            <If.Then>
+                                              <Assign sap2010:WorkflowViewState.IdRef="Assign_26">
+                                                <Assign.To>
+                                                  <OutArgument x:TypeArguments="x:String">[invoiceNo]</OutArgument>
+                                                </Assign.To>
+                                                <Assign.Value>
+                                                  <InArgument x:TypeArguments="x:String">[item.Value.Substring(0, invoiceLength)]</InArgument>
+                                                </Assign.Value>
+                                              </Assign>
+                                            </If.Then>
+                                            <If.Else>
+                                              <Assign sap2010:WorkflowViewState.IdRef="Assign_27">
+                                                <Assign.To>
+                                                  <OutArgument x:TypeArguments="x:String">[invoiceNo]</OutArgument>
+                                                </Assign.To>
+                                                <Assign.Value>
+                                                  <InArgument x:TypeArguments="x:String">[item.Value]</InArgument>
+                                                </Assign.Value>
+                                              </Assign>
+                                            </If.Else>
+                                          </If>
+                                          <Assign sap2010:Annotation.AnnotationText="Add to clipboard string" sap2010:WorkflowViewState.IdRef="Assign_22">
+                                            <Assign.To>
+                                              <OutArgument x:TypeArguments="x:String">[InvoicesString]</OutArgument>
+                                            </Assign.To>
+                                            <Assign.Value>
+                                              <InArgument x:TypeArguments="x:String">[InvoicesString + invoiceNo + Environment.NewLine]</InArgument>
+                                            </Assign.Value>
+                                          </Assign>
+                                          <AddToCollection x:TypeArguments="x:Int64" Collection="[InvoicesList]" DisplayName="Add to collection" sap2010:WorkflowViewState.IdRef="AddToCollection`1_1" Item="[Convert.ToInt64(invoiceNo)]" />
+                                        </Sequence>
+                                      </ActivityAction>
+                                    </ui:ForEach.Body>
+                                  </ui:ForEach>
+                                </Sequence>
+                                <FlowStep.Next>
+                                  <FlowDecision x:Name="__ReferenceID7" sap2010:Annotation.AnnotationText="Check how many invoices are found in email body" Condition="[InvoicesList.Count() &gt; 0]" DisplayName="Invoices &gt; 0?" sap2010:WorkflowViewState.IdRef="FlowDecision_3">
+                                    <FlowDecision.True>
+                                      <FlowStep x:Name="__ReferenceID10" sap2010:WorkflowViewState.IdRef="FlowStep_11">
+                                        <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_2" Text="Finished getting invoices from email" />
+                                      </FlowStep>
+                                    </FlowDecision.True>
+                                    <FlowDecision.False>
+                                      <FlowStep x:Name="__ReferenceID8" sap2010:WorkflowViewState.IdRef="FlowStep_9">
+                                        <Throw DisplayName="Throw Exception" Exception="[new Exception(&quot;No invoices are found in the email body&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_3" />
+                                      </FlowStep>
+                                    </FlowDecision.False>
+                                  </FlowDecision>
+                                </FlowStep.Next>
+                              </FlowStep>
+                            </FlowDecision.True>
+                            <FlowDecision.False>
+                              <FlowStep x:Name="__ReferenceID6" sap2010:WorkflowViewState.IdRef="FlowStep_8">
+                                <Throw DisplayName="Throw Exception" Exception="[new Exception(&quot;ToEmail address has invalid format&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_2" />
+                              </FlowStep>
+                            </FlowDecision.False>
+                          </FlowDecision>
+                        </FlowStep.Next>
+                      </FlowStep>
+                    </FlowDecision.True>
+                    <FlowDecision.False>
+                      <FlowStep x:Name="__ReferenceID4" sap2010:WorkflowViewState.IdRef="FlowStep_6">
+                        <Throw DisplayName="Throw Exception" Exception="[new Exception(&quot;Email does not have email address or it is not in valid format&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_1" />
+                      </FlowStep>
+                    </FlowDecision.False>
+                  </FlowDecision>
+                </FlowStep.Next>
+              </FlowStep>
             </FlowStep.Next>
           </FlowStep>
         </FlowStep.Next>
@@ -241,7 +321,8 @@
     <x:Reference>__ReferenceID8</x:Reference>
     <x:Reference>__ReferenceID9</x:Reference>
     <x:Reference>__ReferenceID10</x:Reference>
-    <sads:DebugSymbol.Symbol>d0NDOlxVc2Vyc1xrZXJtaXRcRG9jdW1lbnRzXFVpUGF0aFxJbnZvaWNlc1xHZXRJbnZvaWNlc0Zyb21FbWFpbC54YW1sNUwD9QEPAgEBUglSiAECAVFVDVwWAgFMXo4BXuABAgFJ4AEV4AHOAQIBR2EVigEgAgEqjAGaAYwBgAICASnXAR3XAboBAgEnjwEdxAEoAgEIxgGjAcYBwgECAQbOASXOAccBAgEEyQElyQGlAQIBAlJgUoUBAgFSWjhaRAIBT1c5Vz8CAU3gAUTgAaEBAgFIZhdxHAIBPXIXeSACATh6F4EBIAIBM4IBF4kBIAIBK9cBTNcBjQECASiUAR+bASgCASKcAR+jASgCARykAR+rASgCARisAR+zASgCARS0AR/DASwCAQnOAVTOAZoBAgEFyQF8yQGiAQIBA2ZdZp0BAgE+aBtvJAIBQHdBd2ECATt0QnRPAgE5f0F/ZAIBNnxCfE0CATSHAUKHAX0CAS6EAUOEAVMCASyZAUmZAW0CASWWAUqWAVgCASOhAUqhAWgCAR+eAUueAVsCAR2pAUypAbwBAgEbpgFNpgFlAgEZsQFTsQFmAgEXrgFUrgFiAgEVtAGSAbQBrAECARK6ASXAATACAQptRm2VAQIBQ2pHak0CAUG7ASe/ASwCAQu7ATW7AVgCAQy9ASu9AekBAgEOvQFhvQFxAgEQvQHNAb0B5gECAQ8=</sads:DebugSymbol.Symbol>
+    <x:Reference>__ReferenceID11</x:Reference>
+    <sads:DebugSymbol.Symbol>d0NDOlxVc2Vyc1xrZXJtaXRcRG9jdW1lbnRzXFVpUGF0aFxJbnZvaWNlc1xHZXRJbnZvaWNlc0Zyb21FbWFpbC54YW1sT0wDxgIPAgEBUglSiAECAX5VDWYYAgFzaRFwGgIBbnKSAXLkAQIBa64CGa4C0gECAWl1GbABJAIBP7IBngGyAYQCAgE+pQIhpQK+AQIBPLUBIZICLAIBCJQCpwGUAsYBAgEGnAIpnALLAQIBBJcCKZcCqQECAQJSYFKFAQIBf1oPZRQCAXRuPG5IAgFxaz1rQwIBb64CSK4CpQECAWp6G4EBJAIBZIIBG4kBJAIBX4oBG5EBJAIBV5IBG68BIAIBQKUCUKUCkQECAT26ASPBASwCATfCASPJASwCATHKASPRASwCAS3SASPZASwCASnaASPjASwCASXkASORAjACAQmcAlicAp4BAgEFlwKAAZcCpgECAQNaVVqbAQIBdVwTYxwCAXd/RX9lAgFnfEZ8UwIBZYcBRYcBaAIBYoQBRoQBUQIBYI8BRo8BgQECAVqMAUeMAVcCAViSAXaSAaoBAgFBlAEfrQEqAgFDvwFNvwFxAgE6vAFOvAFcAgE4xwFOxwFsAgE0xAFPxAFfAgEyzwFZzwGMAQIBMMwBWswBdAIBLtcBV9cBagIBLNQBWNQBZgIBKuABKeABWAIBKNwBT9wBXwIBJuQBlwHkAbMBAgEj6gEpjgI0AgEKYT5hnwECAXpeP15LAgF4lQEhnAEqAgFSnQEhpAEqAgFNpQEhrAEqAgFE7QFZ7QFcAgEL7wErhAIwAgEUhQIrjAI0AgEQjQIrjQLuAQIBDJoBS5oBdgIBVZcBTJcBWQIBU6IBS6IBcwIBUJ8BTJ8BVwIBTqoBTKoBsgECAUenAU2nAV0CAUXvAX/vAacBAgEV8QEv+AE4AgEd+wEvggI4AgEYigJWigKIAQIBE4cCV4cCZwIBEY0CYY0CcQIBDo0CzQGNAusBAgEN9gFa9gGCAQIBIPMBW/MBZgIBHoACWoACZgIBG/0BW/0BZgIBGQ==</sads:DebugSymbol.Symbol>
   </Flowchart>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
@@ -252,6 +333,22 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Assign_28" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="If_5" sap:VirtualizedContainerService.HintSize="464,235">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Sequence_6" sap:VirtualizedContainerService.HintSize="486,386">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="Assign_1" sap:VirtualizedContainerService.HintSize="242,60">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
@@ -259,17 +356,26 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Assign_11" sap:VirtualizedContainerService.HintSize="242,60" />
-      <sap2010:ViewStateData Id="If_2" sap:VirtualizedContainerService.HintSize="464,235">
+      <sap2010:ViewStateData Id="Assign_12" sap:VirtualizedContainerService.HintSize="464,60" />
+      <sap2010:ViewStateData Id="Assign_13" sap:VirtualizedContainerService.HintSize="464,60" />
+      <sap2010:ViewStateData Id="Assign_14" sap:VirtualizedContainerService.HintSize="464,60" />
+      <sap2010:ViewStateData Id="Assign_19" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_20" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_18" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Sequence_4" sap:VirtualizedContainerService.HintSize="264,384">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="If_3" sap:VirtualizedContainerService.HintSize="464,559">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Assign_12" sap:VirtualizedContainerService.HintSize="464,60" />
-      <sap2010:ViewStateData Id="Assign_13" sap:VirtualizedContainerService.HintSize="464,60" />
-      <sap2010:ViewStateData Id="Assign_14" sap:VirtualizedContainerService.HintSize="464,60" />
       <sap2010:ViewStateData Id="Sequence_1" sap:VirtualizedContainerService.HintSize="200,78">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
@@ -278,20 +384,48 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Assign_15" sap:VirtualizedContainerService.HintSize="502,60" />
-      <sap2010:ViewStateData Id="Assign_16" sap:VirtualizedContainerService.HintSize="502,60" />
-      <sap2010:ViewStateData Id="Assign_17" sap:VirtualizedContainerService.HintSize="502,60" />
-      <sap2010:ViewStateData Id="Assign_10" sap:VirtualizedContainerService.HintSize="502,60" />
-      <sap2010:ViewStateData Id="AddToCollection`1_1" sap:VirtualizedContainerService.HintSize="200,22" />
-      <sap2010:ViewStateData Id="If_1" sap:VirtualizedContainerService.HintSize="464,208" />
-      <sap2010:ViewStateData Id="Sequence_3" sap:VirtualizedContainerService.HintSize="486,332">
+      <sap2010:ViewStateData Id="Assign_15" sap:VirtualizedContainerService.HintSize="547,60" />
+      <sap2010:ViewStateData Id="Assign_23" sap:VirtualizedContainerService.HintSize="547,60" />
+      <sap2010:ViewStateData Id="Assign_25" sap:VirtualizedContainerService.HintSize="547,87">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Assign_10" sap:VirtualizedContainerService.HintSize="547,60" />
+      <sap2010:ViewStateData Id="Assign_24" sap:VirtualizedContainerService.HintSize="547,87">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Assign_26" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_27" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="If_4" sap:VirtualizedContainerService.HintSize="509,235">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Assign_22" sap:VirtualizedContainerService.HintSize="509,87">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="AddToCollection`1_1" sap:VirtualizedContainerService.HintSize="509,22" />
+      <sap2010:ViewStateData Id="Sequence_3" sap:VirtualizedContainerService.HintSize="531,548">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="ForEach`1_2" sap:VirtualizedContainerService.HintSize="502,466" />
+      <sap2010:ViewStateData Id="ForEach`1_3" sap:VirtualizedContainerService.HintSize="547,682" />
       <sap2010:ViewStateData Id="Sequence_2" sap:VirtualizedContainerService.HintSize="200,78">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
@@ -310,7 +444,7 @@
       <sap2010:ViewStateData Id="FlowStep_11">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">35,689.5</av:Point>
+            <av:Point x:Key="ShapeLocation">35,809.5</av:Point>
             <av:Size x:Key="ShapeSize">210,61</av:Size>
             <av:PointCollection x:Key="ConnectorLocation">440,160.5 440,190</av:PointCollection>
           </scg:Dictionary>
@@ -326,7 +460,7 @@
       <sap2010:ViewStateData Id="FlowStep_9">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">630,709</av:Point>
+            <av:Point x:Key="ShapeLocation">630,829</av:Point>
             <av:Size x:Key="ShapeSize">200,22</av:Size>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
@@ -335,10 +469,10 @@
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
-            <av:Point x:Key="ShapeLocation">363,648</av:Point>
+            <av:Point x:Key="ShapeLocation">363,768</av:Point>
             <av:Size x:Key="ShapeSize">154,144</av:Size>
-            <av:PointCollection x:Key="FalseConnector">517,720 630,720</av:PointCollection>
-            <av:PointCollection x:Key="TrueConnector">363,720 245,720</av:PointCollection>
+            <av:PointCollection x:Key="FalseConnector">517,840 630,840</av:PointCollection>
+            <av:PointCollection x:Key="TrueConnector">363,840 245,840</av:PointCollection>
             <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
@@ -346,9 +480,9 @@
       <sap2010:ViewStateData Id="FlowStep_2">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">50,481</av:Point>
+            <av:Point x:Key="ShapeLocation">50,601</av:Point>
             <av:Size x:Key="ShapeSize">200,78</av:Size>
-            <av:PointCollection x:Key="ConnectorLocation">150,559 150,618 440,618 440,648</av:PointCollection>
+            <av:PointCollection x:Key="ConnectorLocation">150,679 150,738 440,738 440,768</av:PointCollection>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
@@ -362,7 +496,7 @@
       <sap2010:ViewStateData Id="FlowStep_8">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">630,509</av:Point>
+            <av:Point x:Key="ShapeLocation">630,629</av:Point>
             <av:Size x:Key="ShapeSize">200,22</av:Size>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
@@ -371,10 +505,10 @@
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
-            <av:Point x:Key="ShapeLocation">363,448</av:Point>
+            <av:Point x:Key="ShapeLocation">363,568</av:Point>
             <av:Size x:Key="ShapeSize">154,144</av:Size>
-            <av:PointCollection x:Key="FalseConnector">517,520 630,520</av:PointCollection>
-            <av:PointCollection x:Key="TrueConnector">363,520 250,520</av:PointCollection>
+            <av:PointCollection x:Key="FalseConnector">517,640 630,640</av:PointCollection>
+            <av:PointCollection x:Key="TrueConnector">363,640 250,640</av:PointCollection>
             <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
@@ -382,9 +516,9 @@
       <sap2010:ViewStateData Id="FlowStep_3">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">50,301</av:Point>
+            <av:Point x:Key="ShapeLocation">50,421</av:Point>
             <av:Size x:Key="ShapeSize">200,78</av:Size>
-            <av:PointCollection x:Key="ConnectorLocation">150,379 150,426 440,426 440,448</av:PointCollection>
+            <av:PointCollection x:Key="ConnectorLocation">150,499 150,543 440,543 440,568</av:PointCollection>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
@@ -398,7 +532,7 @@
       <sap2010:ViewStateData Id="FlowStep_6">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">620,329</av:Point>
+            <av:Point x:Key="ShapeLocation">620,449</av:Point>
             <av:Size x:Key="ShapeSize">200,22</av:Size>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
@@ -407,10 +541,10 @@
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
-            <av:Point x:Key="ShapeLocation">358.5,268</av:Point>
+            <av:Point x:Key="ShapeLocation">358.5,388</av:Point>
             <av:Size x:Key="ShapeSize">143,144</av:Size>
-            <av:PointCollection x:Key="FalseConnector">501.5,340 620,340</av:PointCollection>
-            <av:PointCollection x:Key="TrueConnector">358.5,340 250,340</av:PointCollection>
+            <av:PointCollection x:Key="FalseConnector">501.5,460 620,460</av:PointCollection>
+            <av:PointCollection x:Key="TrueConnector">358.5,460 250,460</av:PointCollection>
             <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
@@ -418,9 +552,18 @@
       <sap2010:ViewStateData Id="FlowStep_1">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">309,180</av:Point>
+            <av:Point x:Key="ShapeLocation">309,300</av:Point>
             <av:Size x:Key="ShapeSize">242,60</av:Size>
-            <av:PointCollection x:Key="ConnectorLocation">430,240 430,268</av:PointCollection>
+            <av:PointCollection x:Key="ConnectorLocation">430,360 430,388</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_12">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">330,191</av:Point>
+            <av:Size x:Key="ShapeSize">200,78</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">430,269 430,300</av:PointCollection>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
@@ -429,11 +572,11 @@
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <av:Point x:Key="ShapeLocation">325,99.5</av:Point>
             <av:Size x:Key="ShapeSize">210,61</av:Size>
-            <av:PointCollection x:Key="ConnectorLocation">430,160.5 430,180</av:PointCollection>
+            <av:PointCollection x:Key="ConnectorLocation">430,160.5 430,191</av:PointCollection>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Flowchart_1" sap:VirtualizedContainerService.HintSize="878,828">
+      <sap2010:ViewStateData Id="Flowchart_1" sap:VirtualizedContainerService.HintSize="878,948">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -441,11 +584,11 @@
             <av:Size x:Key="ShapeSize">60,75</av:Size>
             <x:Double x:Key="Width">864</x:Double>
             <av:PointCollection x:Key="ConnectorLocation">430,77.5 430,99.5</av:PointCollection>
-            <x:Double x:Key="Height">792</x:Double>
+            <x:Double x:Key="Height">912</x:Double>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="GetInvoicesFromEmail2_1" sap:VirtualizedContainerService.HintSize="1080,918" />
+      <sap2010:ViewStateData Id="GetInvoicesFromEmail2_1" sap:VirtualizedContainerService.HintSize="918,1068" />
     </sap2010:ViewStateManager>
   </sap2010:WorkflowViewState.ViewStateManager>
 </Activity>

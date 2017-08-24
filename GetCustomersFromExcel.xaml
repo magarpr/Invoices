@@ -16,6 +16,7 @@
     <x:Property Name="ExcelFilePath" Type="InArgument(x:String)" />
     <x:Property Name="ToEmail" Type="InArgument(x:String)" />
     <x:Property Name="CustomerIdList" Type="OutArgument(scg:List(x:Int64))" />
+    <x:Property Name="CanGetAllCustomers" Type="OutArgument(x:Boolean)" />
   </x:Members>
   <mva:VisualBasic.Settings>
     <x:Null />
@@ -74,14 +75,24 @@
   <Flowchart DisplayName="Main" sap2010:WorkflowViewState.IdRef="Flowchart_1">
     <Flowchart.Variables>
       <Variable x:TypeArguments="sd:DataTable" Name="customersDataTable" />
+      <Variable x:TypeArguments="x:Boolean" Default="False" Name="canGetNoCustomers" />
+      <Variable x:TypeArguments="x:String" Name="emailDomain" />
     </Flowchart.Variables>
     <Flowchart.StartNode>
-      <FlowStep x:Name="__ReferenceID5" sap2010:WorkflowViewState.IdRef="FlowStep_5">
+      <FlowStep x:Name="__ReferenceID3" sap2010:WorkflowViewState.IdRef="FlowStep_5">
         <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_1" Text="Started getting customer ids from Excel file" />
         <FlowStep.Next>
-          <FlowStep x:Name="__ReferenceID4" sap2010:WorkflowViewState.IdRef="FlowStep_4">
-            <Sequence sap2010:Annotation.AnnotationText="Reads excel file with customers ids" DisplayName="Read excel file" sap2010:WorkflowViewState.IdRef="Sequence_8">
-              <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[customersDataTable]" DisplayName="Read range" sap2010:WorkflowViewState.IdRef="ReadRange_1" SheetName="Sheet1" WorkbookPath="[ExcelFilePath]" />
+          <FlowStep x:Name="__ReferenceID2" sap2010:WorkflowViewState.IdRef="FlowStep_4">
+            <Sequence sap2010:Annotation.AnnotationText="Reads excel file Manual sheet with customers ids" DisplayName="Read excel file Manual" sap2010:WorkflowViewState.IdRef="Sequence_8">
+              <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[customersDataTable]" DisplayName="Read range" sap2010:WorkflowViewState.IdRef="ReadRange_1" SheetName="Manual" WorkbookPath="[ExcelFilePath]" />
+              <Assign sap2010:WorkflowViewState.IdRef="Assign_5">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:Boolean">[CanGetAllCustomers]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:Boolean">False</InArgument>
+                </Assign.Value>
+              </Assign>
               <Assign sap2010:WorkflowViewState.IdRef="Assign_2">
                 <Assign.To>
                   <OutArgument x:TypeArguments="scg:List(x:Int64)">[CustomerIdList]</OutArgument>
@@ -92,100 +103,162 @@
               </Assign>
             </Sequence>
             <FlowStep.Next>
-              <FlowDecision x:Name="__ReferenceID3" sap2010:Annotation.AnnotationText="Checks if ToEmail domain is @atea.no" Condition="[ToEmail.ToLower().Contains(&quot;@atea.no&quot;)]" DisplayName="If Email Domain is @atea.no?" sap2010:WorkflowViewState.IdRef="FlowDecision_1">
-                <FlowDecision.True>
-                  <FlowStep x:Name="__ReferenceID2" sap2010:WorkflowViewState.IdRef="FlowStep_3">
-                    <Sequence sap2010:Annotation.AnnotationText="Generate list of all customers ids" DisplayName="Take All Customers Ids" sap2010:WorkflowViewState.IdRef="Sequence_6">
-                      <ui:ForEachRow DataTable="[customersDataTable]" DisplayName="For each row" sap2010:WorkflowViewState.IdRef="ForEachRow_2">
-                        <ui:ForEachRow.Body>
-                          <ActivityAction x:TypeArguments="sd:DataRow">
-                            <ActivityAction.Argument>
-                              <DelegateInArgument x:TypeArguments="sd:DataRow" Name="row" />
-                            </ActivityAction.Argument>
-                            <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_5">
-                              <TryCatch DisplayName="Try catch" sap2010:WorkflowViewState.IdRef="TryCatch_2">
-                                <TryCatch.Try>
-                                  <AddToCollection x:TypeArguments="x:Int64" Collection="[CustomerIdList]" DisplayName="Add to collection" sap2010:WorkflowViewState.IdRef="AddToCollection`1_3" Item="[Convert.ToInt64(row(&quot;Customer number&quot;))]" />
-                                </TryCatch.Try>
-                                <TryCatch.Catches>
-                                  <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_2">
-                                    <ActivityAction x:TypeArguments="s:Exception">
-                                      <ActivityAction.Argument>
-                                        <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
-                                      </ActivityAction.Argument>
-                                      <ui:LogMessage DisplayName="Log message" sap2010:WorkflowViewState.IdRef="LogMessage_4" Level="Warn" Message="[&quot;Bad customer id format: &quot; + exception.Message]" />
-                                    </ActivityAction>
-                                  </Catch>
-                                </TryCatch.Catches>
-                              </TryCatch>
-                            </Sequence>
-                          </ActivityAction>
-                        </ui:ForEachRow.Body>
-                      </ui:ForEachRow>
-                    </Sequence>
-                    <FlowStep.Next>
-                      <FlowStep x:Name="__ReferenceID0" sap2010:WorkflowViewState.IdRef="FlowStep_6">
-                        <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_2" Text="FInished getting customer ids from Excel file" />
+              <FlowStep x:Name="__ReferenceID1" sap2010:WorkflowViewState.IdRef="FlowStep_2">
+                <Sequence sap2010:Annotation.AnnotationText="Filter customers Ids by full email or it's domain in Manual sheet" DisplayName="Filter Customers Manual" sap2010:WorkflowViewState.IdRef="Sequence_4">
+                  <Sequence.Variables>
+                    <Variable x:TypeArguments="sd:DataRow[]" Name="customersDataRows" />
+                  </Sequence.Variables>
+                  <Assign DisplayName="Get Email Domain" sap2010:WorkflowViewState.IdRef="Assign_3">
+                    <Assign.To>
+                      <OutArgument x:TypeArguments="x:String">[emailDomain]</OutArgument>
+                    </Assign.To>
+                    <Assign.Value>
+                      <InArgument x:TypeArguments="x:String">[ToEmail.Split("@"c).Last()]</InArgument>
+                    </Assign.Value>
+                  </Assign>
+                  <Assign DisplayName="Filter Customers Ids or rules" sap2010:WorkflowViewState.IdRef="Assign_4">
+                    <Assign.To>
+                      <OutArgument x:TypeArguments="sd:DataRow[]">[customersDataRows]</OutArgument>
+                    </Assign.To>
+                    <Assign.Value>
+                      <InArgument x:TypeArguments="sd:DataRow[]">[customersDataTable.Select("TRIM([Approved email]) = '" + ToEmail + "' OR TRIM([Approved email]) = '" + emailDomain + "'")]</InArgument>
+                    </Assign.Value>
+                  </Assign>
+                  <ui:ForEach x:TypeArguments="sd:DataRow" DisplayName="For each" sap2010:WorkflowViewState.IdRef="ForEach`1_1" Values="[customersDataRows]">
+                    <ui:ForEach.Body>
+                      <ActivityAction x:TypeArguments="sd:DataRow">
+                        <ActivityAction.Argument>
+                          <DelegateInArgument x:TypeArguments="sd:DataRow" Name="row" />
+                        </ActivityAction.Argument>
+                        <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_10">
+                          <TryCatch DisplayName="Try catch" sap2010:WorkflowViewState.IdRef="TryCatch_3">
+                            <TryCatch.Try>
+                              <Sequence sap2010:WorkflowViewState.IdRef="Sequence_11">
+                                <Switch x:TypeArguments="x:String" DisplayName="Switch" Expression="[row(&quot;Payer&quot;).ToString.Trim.ToLower]" sap2010:WorkflowViewState.IdRef="Switch`1_2">
+                                  <Switch.Default>
+                                    <AddToCollection x:TypeArguments="x:Int64" Collection="[CustomerIdList]" DisplayName="Add to collection" sap2010:WorkflowViewState.IdRef="AddToCollection`1_4" Item="[Convert.ToInt64(row(&quot;Payer&quot;))]" />
+                                  </Switch.Default>
+                                  <Assign x:Key="*" sap2010:WorkflowViewState.IdRef="Assign_8">
+                                    <Assign.To>
+                                      <OutArgument x:TypeArguments="x:Boolean">[CanGetAllCustomers]</OutArgument>
+                                    </Assign.To>
+                                    <Assign.Value>
+                                      <InArgument x:TypeArguments="x:Boolean">True</InArgument>
+                                    </Assign.Value>
+                                  </Assign>
+                                  <Assign x:Key="not" sap2010:WorkflowViewState.IdRef="Assign_9">
+                                    <Assign.To>
+                                      <OutArgument x:TypeArguments="x:Boolean">[canGetNoCustomers]</OutArgument>
+                                    </Assign.To>
+                                    <Assign.Value>
+                                      <InArgument x:TypeArguments="x:Boolean">True</InArgument>
+                                    </Assign.Value>
+                                  </Assign>
+                                </Switch>
+                              </Sequence>
+                            </TryCatch.Try>
+                            <TryCatch.Catches>
+                              <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_3">
+                                <ActivityAction x:TypeArguments="s:Exception">
+                                  <ActivityAction.Argument>
+                                    <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+                                  </ActivityAction.Argument>
+                                  <ui:LogMessage DisplayName="Log message" sap2010:WorkflowViewState.IdRef="LogMessage_5" Level="Warn" Message="[&quot;Bad customer id format: &quot; + exception.Message + &quot; String: &quot; + row(&quot;Payer&quot;).ToString.Trim.ToLower]" />
+                                </ActivityAction>
+                              </Catch>
+                            </TryCatch.Catches>
+                          </TryCatch>
+                        </Sequence>
+                      </ActivityAction>
+                    </ui:ForEach.Body>
+                  </ui:ForEach>
+                </Sequence>
+                <FlowStep.Next>
+                  <FlowDecision x:Name="__ReferenceID4" sap2010:Annotation.AnnotationText="Checks if can get all or none customers" Condition="[CanGetAllCustomers Or canGetNoCustomers]" DisplayName="All or none customers?" sap2010:WorkflowViewState.IdRef="FlowDecision_2">
+                    <FlowDecision.True>
+                      <FlowStep x:Name="__ReferenceID6" sap2010:WorkflowViewState.IdRef="FlowStep_8">
+                        <Sequence DisplayName="Clear fields" sap2010:WorkflowViewState.IdRef="Sequence_15">
+                          <Assign DisplayName="Clear customers list" sap2010:WorkflowViewState.IdRef="Assign_10">
+                            <Assign.To>
+                              <OutArgument x:TypeArguments="scg:List(x:Int64)">[CustomerIdList]</OutArgument>
+                            </Assign.To>
+                            <Assign.Value>
+                              <InArgument x:TypeArguments="scg:List(x:Int64)">[new List(of Long)]</InArgument>
+                            </Assign.Value>
+                          </Assign>
+                          <If sap2010:Annotation.AnnotationText="If can get all customers, then sets can get all customers to false" Condition="[canGetNoCustomers]" sap2010:WorkflowViewState.IdRef="If_1">
+                            <If.Then>
+                              <Assign sap2010:WorkflowViewState.IdRef="Assign_11">
+                                <Assign.To>
+                                  <OutArgument x:TypeArguments="x:Boolean">[CanGetAllCustomers]</OutArgument>
+                                </Assign.To>
+                                <Assign.Value>
+                                  <InArgument x:TypeArguments="x:Boolean">False</InArgument>
+                                </Assign.Value>
+                              </Assign>
+                            </If.Then>
+                          </If>
+                        </Sequence>
+                        <FlowStep.Next>
+                          <FlowStep x:Name="__ReferenceID0" sap2010:WorkflowViewState.IdRef="FlowStep_6">
+                            <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_2" Text="FInished getting customer ids from Excel file" />
+                          </FlowStep>
+                        </FlowStep.Next>
                       </FlowStep>
-                    </FlowStep.Next>
-                  </FlowStep>
-                </FlowDecision.True>
-                <FlowDecision.False>
-                  <FlowStep x:Name="__ReferenceID1" sap2010:WorkflowViewState.IdRef="FlowStep_2">
-                    <Sequence sap2010:Annotation.AnnotationText="Filter customers Ids by full email or it's domain" DisplayName="Filter Customers" sap2010:WorkflowViewState.IdRef="Sequence_4">
-                      <Sequence.Variables>
-                        <Variable x:TypeArguments="sd:DataRow[]" Name="customersDataRows" />
-                        <Variable x:TypeArguments="x:String" Name="emailDomain" />
-                      </Sequence.Variables>
-                      <Assign DisplayName="Get Email Domain" sap2010:WorkflowViewState.IdRef="Assign_3">
-                        <Assign.To>
-                          <OutArgument x:TypeArguments="x:String">[emailDomain]</OutArgument>
-                        </Assign.To>
-                        <Assign.Value>
-                          <InArgument x:TypeArguments="x:String">["@" + ToEmail.Split("@"c).Last()]</InArgument>
-                        </Assign.Value>
-                      </Assign>
-                      <Assign DisplayName="Filter Customers Ids" sap2010:WorkflowViewState.IdRef="Assign_4">
-                        <Assign.To>
-                          <OutArgument x:TypeArguments="sd:DataRow[]">[customersDataRows]</OutArgument>
-                        </Assign.To>
-                        <Assign.Value>
-                          <InArgument x:TypeArguments="sd:DataRow[]">[customersDataTable.Select("TRIM([Approved email]) = '" + ToEmail + "' OR TRIM([Approved email]) = '" + emailDomain + "'")]</InArgument>
-                        </Assign.Value>
-                      </Assign>
-                      <ui:ForEach x:TypeArguments="sd:DataRow" DisplayName="For each" sap2010:WorkflowViewState.IdRef="ForEach`1_1" Values="[customersDataRows]">
-                        <ui:ForEach.Body>
-                          <ActivityAction x:TypeArguments="sd:DataRow">
-                            <ActivityAction.Argument>
-                              <DelegateInArgument x:TypeArguments="sd:DataRow" Name="row" />
-                            </ActivityAction.Argument>
-                            <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_10">
-                              <TryCatch DisplayName="Try catch" sap2010:WorkflowViewState.IdRef="TryCatch_3">
-                                <TryCatch.Try>
-                                  <AddToCollection x:TypeArguments="x:Int64" Collection="[CustomerIdList]" DisplayName="Add to collection" sap2010:WorkflowViewState.IdRef="AddToCollection`1_4" Item="[Convert.ToInt64(row(&quot;Customer number&quot;))]" />
-                                </TryCatch.Try>
-                                <TryCatch.Catches>
-                                  <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_3">
-                                    <ActivityAction x:TypeArguments="s:Exception">
-                                      <ActivityAction.Argument>
-                                        <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
-                                      </ActivityAction.Argument>
-                                      <ui:LogMessage DisplayName="Log message" sap2010:WorkflowViewState.IdRef="LogMessage_5" Level="Warn" Message="[&quot;Bad customer id format: &quot; + exception.Message]" />
-                                    </ActivityAction>
-                                  </Catch>
-                                </TryCatch.Catches>
-                              </TryCatch>
-                            </Sequence>
-                          </ActivityAction>
-                        </ui:ForEach.Body>
-                      </ui:ForEach>
-                    </Sequence>
-                    <FlowStep.Next>
-                      <x:Reference>__ReferenceID0</x:Reference>
-                    </FlowStep.Next>
-                  </FlowStep>
-                </FlowDecision.False>
-              </FlowDecision>
+                    </FlowDecision.True>
+                    <FlowDecision.False>
+                      <FlowStep x:Name="__ReferenceID5" sap2010:WorkflowViewState.IdRef="FlowStep_7">
+                        <Sequence sap2010:Annotation.AnnotationText="Reads and filters customers Ids by full email or it's domain in From SAP sheet" DisplayName="Read excel and filter customers SAP" sap2010:WorkflowViewState.IdRef="Sequence_14">
+                          <Sequence.Variables>
+                            <Variable x:TypeArguments="sd:DataRow[]" Name="customersDataRows" />
+                            <Variable x:TypeArguments="x:String" Name="emailDomain" />
+                          </Sequence.Variables>
+                          <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[customersDataTable]" DisplayName="Read range" sap2010:WorkflowViewState.IdRef="ReadRange_2" SheetName="From SAP" WorkbookPath="[ExcelFilePath]" />
+                          <Assign DisplayName="Filter Customers Ids or rules" sap2010:WorkflowViewState.IdRef="Assign_7">
+                            <Assign.To>
+                              <OutArgument x:TypeArguments="sd:DataRow[]">[customersDataRows]</OutArgument>
+                            </Assign.To>
+                            <Assign.Value>
+                              <InArgument x:TypeArguments="sd:DataRow[]">[customersDataTable.Select("TRIM([Domene Clerks Internet]) = '" + ToEmail + "' OR TRIM([Domene Clerks Internet]) = '" + emailDomain + "' OR TRIM([Domene PDF]) = '" + ToEmail + "' OR TRIM([Domene PDF]) = '" + emailDomain + "' OR TRIM([Domene Order Confirmation]) = '" + ToEmail + "' OR TRIM([Domene Order Confirmation]) = '" + emailDomain + "'")]</InArgument>
+                            </Assign.Value>
+                          </Assign>
+                          <ui:ForEach x:TypeArguments="sd:DataRow" DisplayName="For each" sap2010:WorkflowViewState.IdRef="ForEach`1_2" Values="[customersDataRows]">
+                            <ui:ForEach.Body>
+                              <ActivityAction x:TypeArguments="sd:DataRow">
+                                <ActivityAction.Argument>
+                                  <DelegateInArgument x:TypeArguments="sd:DataRow" Name="row" />
+                                </ActivityAction.Argument>
+                                <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_13">
+                                  <TryCatch DisplayName="Try catch" sap2010:WorkflowViewState.IdRef="TryCatch_4">
+                                    <TryCatch.Try>
+                                      <Sequence sap2010:WorkflowViewState.IdRef="Sequence_12">
+                                        <AddToCollection x:TypeArguments="x:Int64" Collection="[CustomerIdList]" DisplayName="Add to collection" sap2010:WorkflowViewState.IdRef="AddToCollection`1_5" Item="[Convert.ToInt64(row(&quot;Payer&quot;))]" />
+                                      </Sequence>
+                                    </TryCatch.Try>
+                                    <TryCatch.Catches>
+                                      <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_4">
+                                        <ActivityAction x:TypeArguments="s:Exception">
+                                          <ActivityAction.Argument>
+                                            <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+                                          </ActivityAction.Argument>
+                                          <ui:LogMessage DisplayName="Log message" sap2010:WorkflowViewState.IdRef="LogMessage_6" Level="Warn" Message="[&quot;Bad customer id format: &quot; + exception.Message + &quot; String: &quot; + row(&quot;Payer&quot;).ToString.Trim.ToLower]" />
+                                        </ActivityAction>
+                                      </Catch>
+                                    </TryCatch.Catches>
+                                  </TryCatch>
+                                </Sequence>
+                              </ActivityAction>
+                            </ui:ForEach.Body>
+                          </ui:ForEach>
+                        </Sequence>
+                        <FlowStep.Next>
+                          <x:Reference>__ReferenceID0</x:Reference>
+                        </FlowStep.Next>
+                      </FlowStep>
+                    </FlowDecision.False>
+                  </FlowDecision>
+                </FlowStep.Next>
+              </FlowStep>
             </FlowStep.Next>
           </FlowStep>
         </FlowStep.Next>
@@ -194,10 +267,11 @@
     <x:Reference>__ReferenceID1</x:Reference>
     <x:Reference>__ReferenceID2</x:Reference>
     <x:Reference>__ReferenceID3</x:Reference>
+    <x:Reference>__ReferenceID0</x:Reference>
     <x:Reference>__ReferenceID4</x:Reference>
     <x:Reference>__ReferenceID5</x:Reference>
-    <x:Reference>__ReferenceID0</x:Reference>
-    <sads:DebugSymbol.Symbol>dzpDOlxVc2Vyc1xrZXJtaXRcRGVza3RvcFxQUk9KRUNUXEdldEN1c3RvbWVyc0Zyb21FeGNlbC54YW1sKEoDyQEPAgEBUAlQkQECATJTDV0YAgEnX4gBX7wBAgElhwEVtgEgAgERgAEZgAGiAQIBD2IVfSACAQJQYFCOAQIBM1QPVNwBAgEsVQ9cGAIBKIwBF5MBIAIBIZQBF5sBIAIBHZwBF7UBJAIBEoABcIABnwECARBjF3wnAgEDVEpUYAIBMFSyAVS6AQIBL1TIAVTZAQIBLVpDWlYCAStXRFdUAgEpkQFCkQFkAgEkjgFDjgFQAgEimQFGmQHBAQIBIJYBR5YBWgIBHpwBjAGcAaEBAgEcogEdsgEoAgETYzBjRgIBDWkdeSgCAQSjAR+xASoCARRqH3gqAgEFpQEjpQH/AQIBGK0BJ60B0wECARVsI2z/AQIBCXQndNMBAgEGpQFZpQFrAgEapQHHAaUB/AECARmtAZQBrQHQAQIBFmxZbGsCAQtsxwFs/AECAQp0lAF00AECAQc=</sads:DebugSymbol.Symbol>
+    <x:Reference>__ReferenceID6</x:Reference>
+    <sads:DebugSymbol.Symbol>d0RDOlxVc2Vyc1xrZXJtaXRcRG9jdW1lbnRzXFVpUGF0aFxJbnZvaWNlc1xHZXRDdXN0b21lcnNGcm9tRXhjZWwueGFtbEZLA5MCDwIBAU41TjwCAQJTCVORAQIBV1YNaBgCAUhrEa8BHAIBKrEBjwGxAboBAgEn0wEZ/QEkAgERzAEdzAGmAQIBD7QBGckBJAIBA1NgU44BAgFYVw9X3AECAVFYD18YAgFNYA9nGAIBSW8TdhwCAUR3E34cAgFAfxOuASACASvYARvYAeoBAgEh2QEb4AEkAgEd4QEb/AEoAgESzAF0zAGjAQIBELUBG7wBJAIBC70BG8gBIAIBBFdKV2ACAVVXsgFXugECAVRXyAFX2QECAVJdO11AAgFQWjxaUAIBTmVDZVYCAUxiRGJUAgFKdD50WgIBR3E/cUwCAUV8Qny9AQIBQ3lDeVYCAUF/iAF/nQECAT+FARmrASQCASzYAVbYAWwCASXYAb4B2AHIAQIBJNgB1gHYAecBAgEi3gFK3gGjAwIBINsBS9sBXgIBHuEBkAHhAaUBAgEc5wEh+QEsAgETugFPugFiAgEOtwFQtwFgAgEMvQGQAb0BpQECAQW/AR/GASgCAQeGARuqASYCAS3oASP4AS4CARTEAUvEAVACAQrBAUzBAWACAQiIAR+eASoCATCmASOmAZYCAgEu6gEn7AEyAgEX9AEr9AGeAgIBFYkBIZ0BKgIBMaYBkAGmAZMCAgEv6wEp6wH7AQIBGPQBmAH0AZsCAgEWiQFkiQGUAQIBMo0BI5QBLAIBO5UBI5wBLAIBN4sBJYsB9wECATPrAV/rAXECARrrAc0B6wH4AQIBGZIBT5IBUwIBPo8BUI8BZAIBPJoBT5oBUwIBOpcBUJcBYwIBOIsBW4sBbQIBNYsByQGLAfQBAgE0</sads:DebugSymbol.Symbol>
   </Flowchart>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
@@ -209,6 +283,7 @@
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="ReadRange_1" sap:VirtualizedContainerService.HintSize="314,87" />
+      <sap2010:ViewStateData Id="Assign_5" sap:VirtualizedContainerService.HintSize="314,60" />
       <sap2010:ViewStateData Id="Assign_2" sap:VirtualizedContainerService.HintSize="314,60" />
       <sap2010:ViewStateData Id="Sequence_8" sap:VirtualizedContainerService.HintSize="200,93">
         <sap:WorkflowViewStateService.ViewState>
@@ -218,30 +293,65 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="AddToCollection`1_3" sap:VirtualizedContainerService.HintSize="200,22" />
-      <sap2010:ViewStateData Id="LogMessage_4" sap:VirtualizedContainerService.HintSize="314,91" />
-      <sap2010:ViewStateData Id="Catch`1_2" sap:VirtualizedContainerService.HintSize="404,21">
+      <sap2010:ViewStateData Id="Assign_3" sap:VirtualizedContainerService.HintSize="452,60" />
+      <sap2010:ViewStateData Id="Assign_4" sap:VirtualizedContainerService.HintSize="452,60" />
+      <sap2010:ViewStateData Id="AddToCollection`1_4" sap:VirtualizedContainerService.HintSize="200,22" />
+      <sap2010:ViewStateData Id="Assign_8" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_9" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Switch`1_2" sap:VirtualizedContainerService.HintSize="476,160" />
+      <sap2010:ViewStateData Id="Sequence_11" sap:VirtualizedContainerService.HintSize="498,281">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="LogMessage_5" sap:VirtualizedContainerService.HintSize="314,91" />
+      <sap2010:ViewStateData Id="Catch`1_3" sap:VirtualizedContainerService.HintSize="400,160">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
             <x:Boolean x:Key="IsPinned">False</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="TryCatch_2" sap:VirtualizedContainerService.HintSize="418,287" />
-      <sap2010:ViewStateData Id="Sequence_5" sap:VirtualizedContainerService.HintSize="440,411">
+      <sap2010:ViewStateData Id="TryCatch_3" sap:VirtualizedContainerService.HintSize="414,322">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Sequence_10" sap:VirtualizedContainerService.HintSize="436,446">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="ForEachRow_2" sap:VirtualizedContainerService.HintSize="470,559" />
-      <sap2010:ViewStateData Id="Sequence_6" sap:VirtualizedContainerService.HintSize="200,93">
+      <sap2010:ViewStateData Id="ForEach`1_1" sap:VirtualizedContainerService.HintSize="452,580" />
+      <sap2010:ViewStateData Id="Sequence_4" sap:VirtualizedContainerService.HintSize="200,108">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
             <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Assign_10" sap:VirtualizedContainerService.HintSize="464,60" />
+      <sap2010:ViewStateData Id="Assign_11" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="If_1" sap:VirtualizedContainerService.HintSize="464,235">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Sequence_15" sap:VirtualizedContainerService.HintSize="200,51">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
@@ -255,34 +365,33 @@
       <sap2010:ViewStateData Id="FlowStep_6">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">195,599.5</av:Point>
+            <av:Point x:Key="ShapeLocation">255,619.5</av:Point>
             <av:Size x:Key="ShapeSize">210,61</av:Size>
             <av:PointCollection x:Key="ConnectorLocation">310,180.5 310,203.5</av:PointCollection>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="FlowStep_3">
+      <sap2010:ViewStateData Id="FlowStep_8">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">10,473.5</av:Point>
-            <av:Size x:Key="ShapeSize">200,93</av:Size>
-            <av:PointCollection x:Key="ConnectorLocation">110,566.5 110,630 195,630</av:PointCollection>
+            <av:Point x:Key="ShapeLocation">0,494.5</av:Point>
+            <av:Size x:Key="ShapeSize">200,51</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">100,545.5 100,650 255,650</av:PointCollection>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Assign_3" sap:VirtualizedContainerService.HintSize="456,60" />
-      <sap2010:ViewStateData Id="Assign_4" sap:VirtualizedContainerService.HintSize="456,60" />
-      <sap2010:ViewStateData Id="AddToCollection`1_4" sap:VirtualizedContainerService.HintSize="200,22" />
-      <sap2010:ViewStateData Id="LogMessage_5" sap:VirtualizedContainerService.HintSize="314,91" />
-      <sap2010:ViewStateData Id="Catch`1_3" sap:VirtualizedContainerService.HintSize="404,21">
+      <sap2010:ViewStateData Id="ReadRange_2" sap:VirtualizedContainerService.HintSize="452,87" />
+      <sap2010:ViewStateData Id="Assign_7" sap:VirtualizedContainerService.HintSize="452,60" />
+      <sap2010:ViewStateData Id="AddToCollection`1_5" sap:VirtualizedContainerService.HintSize="200,22" />
+      <sap2010:ViewStateData Id="Sequence_12" sap:VirtualizedContainerService.HintSize="222,146">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
-            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="TryCatch_3" sap:VirtualizedContainerService.HintSize="418,287">
+      <sap2010:ViewStateData Id="LogMessage_6" sap:VirtualizedContainerService.HintSize="314,91" />
+      <sap2010:ViewStateData Id="Catch`1_4" sap:VirtualizedContainerService.HintSize="400,160">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
@@ -290,74 +399,91 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Sequence_10" sap:VirtualizedContainerService.HintSize="440,411">
+      <sap2010:ViewStateData Id="TryCatch_4" sap:VirtualizedContainerService.HintSize="414,322">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Sequence_13" sap:VirtualizedContainerService.HintSize="436,446">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="ForEach`1_1" sap:VirtualizedContainerService.HintSize="456,545" />
-      <sap2010:ViewStateData Id="Sequence_4" sap:VirtualizedContainerService.HintSize="200,93">
+      <sap2010:ViewStateData Id="ForEach`1_2" sap:VirtualizedContainerService.HintSize="452,580" />
+      <sap2010:ViewStateData Id="Sequence_14" sap:VirtualizedContainerService.HintSize="474,958">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
             <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_7">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">520,466</av:Point>
+            <av:Size x:Key="ShapeSize">200,108</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">620,574 620,650 465,650</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowDecision_2" sap:VirtualizedContainerService.HintSize="149,129">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <av:Point x:Key="ShapeLocation">285.5,455.5</av:Point>
+            <av:Size x:Key="ShapeSize">149,129</av:Size>
+            <av:PointCollection x:Key="TrueConnector">285.5,520 200,520</av:PointCollection>
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+            <av:PointCollection x:Key="FalseConnector">434.5,520 520,520</av:PointCollection>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="FlowStep_2">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">390,473.5</av:Point>
-            <av:Size x:Key="ShapeSize">200,93</av:Size>
-            <av:PointCollection x:Key="ConnectorLocation">490,566.5 490,630 405,630</av:PointCollection>
-          </scg:Dictionary>
-        </sap:WorkflowViewStateService.ViewState>
-      </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="FlowDecision_1" sap:VirtualizedContainerService.HintSize="160,129">
-        <sap:WorkflowViewStateService.ViewState>
-          <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
-            <av:Point x:Key="ShapeLocation">220,325.5</av:Point>
-            <av:Size x:Key="ShapeSize">160,129</av:Size>
-            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
-            <av:PointCollection x:Key="TrueConnector">220,390 110,390 110,473.5</av:PointCollection>
-            <av:PointCollection x:Key="FalseConnector">380,390 490,390 490,473.5</av:PointCollection>
+            <av:Point x:Key="ShapeLocation">260,316</av:Point>
+            <av:Size x:Key="ShapeSize">200,108</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">360,424 360,455.5</av:PointCollection>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="FlowStep_4">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">200,193.5</av:Point>
+            <av:Point x:Key="ShapeLocation">260,193.5</av:Point>
             <av:Size x:Key="ShapeSize">200,93</av:Size>
-            <av:PointCollection x:Key="ConnectorLocation">300,286.5 300,325.5</av:PointCollection>
+            <av:PointCollection x:Key="ConnectorLocation">360,286.5 360,316</av:PointCollection>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="FlowStep_5">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">195,109.5</av:Point>
+            <av:Point x:Key="ShapeLocation">255,109.5</av:Point>
             <av:Size x:Key="ShapeSize">210,61</av:Size>
-            <av:PointCollection x:Key="ConnectorLocation">300,170.5 300,193.5</av:PointCollection>
+            <av:PointCollection x:Key="ConnectorLocation">360,170.5 360,193.5</av:PointCollection>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Flowchart_1" sap:VirtualizedContainerService.HintSize="618,710">
+      <sap2010:ViewStateData Id="Flowchart_1" sap:VirtualizedContainerService.HintSize="744,744">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
-            <av:Point x:Key="ShapeLocation">270,2.5</av:Point>
+            <av:Point x:Key="ShapeLocation">330,2.5</av:Point>
             <av:Size x:Key="ShapeSize">60,75</av:Size>
-            <x:Double x:Key="Width">604</x:Double>
-            <av:PointCollection x:Key="ConnectorLocation">300,77.5 300,109.5</av:PointCollection>
-            <x:Double x:Key="Height">674</x:Double>
+            <x:Double x:Key="Width">730</x:Double>
+            <av:PointCollection x:Key="ConnectorLocation">360,77.5 360,109.5</av:PointCollection>
+            <x:Double x:Key="Height">707.59999999999991</x:Double>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="GetCustomersFromExcel_1" sap:VirtualizedContainerService.HintSize="678,716" />
+      <sap2010:ViewStateData Id="GetCustomersFromExcel_1" sap:VirtualizedContainerService.HintSize="784,824" />
     </sap2010:ViewStateManager>
   </sap2010:WorkflowViewState.ViewStateManager>
 </Activity>

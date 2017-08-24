@@ -17,6 +17,9 @@
     <x:Property Name="EmailHasValidError" Type="InArgument(x:String)" />
     <x:Property Name="FilesToSend" Type="InArgument(scg:List(x:String))" />
     <x:Property Name="SAPPDFFolder" Type="InArgument(x:String)" />
+    <x:Property Name="AllFilesToSend" Type="InArgument(scg:List(x:String))" />
+    <x:Property Name="EmailSuccessTemplate" Type="InArgument(x:String)" />
+    <x:Property Name="EmailFailureTemplate" Type="InArgument(x:String)" />
   </x:Members>
   <mva:VisualBasic.Settings>
     <x:Null />
@@ -80,6 +83,7 @@
       <x:String>UiPath.SOAP.Activities</x:String>
       <x:String>UiPath.XML.Activities</x:String>
       <x:String>System.Windows.Markup</x:String>
+      <x:String>System.Text.RegularExpressions</x:String>
     </sco:Collection>
   </TextExpression.NamespacesForImplementation>
   <TextExpression.ReferencesForImplementation>
@@ -114,6 +118,7 @@
       <AssemblyReference>System.ComponentModel.Composition</AssemblyReference>
       <AssemblyReference>System.ServiceModel</AssemblyReference>
       <AssemblyReference>System.Runtime.WindowsRuntime</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualStudio.Services.Common</AssemblyReference>
     </sco:Collection>
   </TextExpression.ReferencesForImplementation>
   <Sequence DisplayName="Send Invoices" sap2010:WorkflowViewState.IdRef="Sequence_73">
@@ -126,7 +131,7 @@
               <Variable x:TypeArguments="x:String" Name="mailTemplate" />
               <Variable x:TypeArguments="snm:MailMessage" Name="clientEmail" />
             </Sequence.Variables>
-            <ui:ReadTextFile Content="[mailTemplate]" DisplayName="Read Email Template" FileName="EmailSuccessTemplate.txt" sap2010:WorkflowViewState.IdRef="ReadTextFile_3" />
+            <ui:ReadTextFile Content="[mailTemplate]" DisplayName="Read Email Template" FileName="[EmailSuccessTemplate]" sap2010:WorkflowViewState.IdRef="ReadTextFile_3" />
             <Assign DisplayName="Create New Client Mail" sap2010:WorkflowViewState.IdRef="Assign_53">
               <Assign.To>
                 <OutArgument x:TypeArguments="snm:MailMessage">[clientEmail]</OutArgument>
@@ -140,7 +145,7 @@
                 <OutArgument x:TypeArguments="x:String">[clientEmail.Subject]</OutArgument>
               </Assign.To>
               <Assign.Value>
-                <InArgument x:TypeArguments="x:String">Invoices</InArgument>
+                <InArgument x:TypeArguments="x:String">Request for invoice copy</InArgument>
               </Assign.Value>
             </Assign>
             <Assign DisplayName="Assign Mail Body" sap2010:WorkflowViewState.IdRef="Assign_55">
@@ -151,7 +156,7 @@
                 <InArgument x:TypeArguments="x:String">[mailTemplate]</InArgument>
               </Assign.Value>
             </Assign>
-            <ui:ForEach x:TypeArguments="x:String" DisplayName="For each" sap2010:WorkflowViewState.IdRef="ForEach`1_1" Values="[filesToSend]">
+            <ui:ForEach x:TypeArguments="x:String" DisplayName="For each" sap2010:WorkflowViewState.IdRef="ForEach`1_1" Values="[FilesToSend]">
               <ui:ForEach.Body>
                 <ActivityAction x:TypeArguments="x:String">
                   <ActivityAction.Argument>
@@ -160,16 +165,27 @@
                   <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_84">
                     <Sequence.Variables>
                       <Variable x:TypeArguments="snm:Attachment" Name="attachment" />
+                      <Variable x:TypeArguments="x:String" Name="renamedAttachment" />
                     </Sequence.Variables>
+                    <Assign DisplayName="Rename attachment to invoice no" sap2010:WorkflowViewState.IdRef="Assign_61">
+                      <Assign.To>
+                        <OutArgument x:TypeArguments="x:String">[renamedAttachment]</OutArgument>
+                      </Assign.To>
+                      <Assign.Value>
+                        <InArgument x:TypeArguments="x:String">[Regex.Match(file, "\d+").Value + ".pdf"]</InArgument>
+                      </Assign.Value>
+                    </Assign>
+                    <ui:MoveFile ContinueOnError="{x:Null}" Destination="[SAPPDFFolder + &quot;\&quot; + renamedAttachment]" DisplayName="Rename file" sap2010:WorkflowViewState.IdRef="MoveFile_1" Overwrite="False" Path="[SAPPDFFolder + &quot;\&quot; + file]" />
                     <Assign DisplayName="Create Attachment" sap2010:WorkflowViewState.IdRef="Assign_56">
                       <Assign.To>
                         <OutArgument x:TypeArguments="snm:Attachment">[attachment]</OutArgument>
                       </Assign.To>
                       <Assign.Value>
-                        <InArgument x:TypeArguments="snm:Attachment">[new Attachment(SAPPDFFolder + "\" + file, System.Net.Mime.MediaTypeNames.Application.Octet)]</InArgument>
+                        <InArgument x:TypeArguments="snm:Attachment">[new Attachment(SAPPDFFolder + "\" + renamedAttachment, System.Net.Mime.MediaTypeNames.Application.Octet)]</InArgument>
                       </Assign.Value>
                     </Assign>
-                    <InvokeMethod DisplayName="Add Attachment to Error Mail" sap2010:WorkflowViewState.IdRef="InvokeMethod_1" MethodName="Add">
+                    <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_13" Text="[&quot;Adding attachment &quot; + renamedAttachment]" />
+                    <InvokeMethod DisplayName="Add Attachment to Client Mail" sap2010:WorkflowViewState.IdRef="InvokeMethod_1" MethodName="Add">
                       <InvokeMethod.TargetObject>
                         <InArgument x:TypeArguments="snm:AttachmentCollection">[clientEmail.Attachments]</InArgument>
                       </InvokeMethod.TargetObject>
@@ -195,20 +211,91 @@
       </If.Then>
       <If.Else>
         <Sequence sap2010:WorkflowViewState.IdRef="Sequence_74">
+          <Sequence.Variables>
+            <Variable x:TypeArguments="snm:MailMessage" Name="kreditMail" />
+          </Sequence.Variables>
           <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_7" Text="Started sending mail to a HelpDesk" />
           <ui:LogMessage DisplayName="Log message" sap2010:WorkflowViewState.IdRef="LogMessage_32" Level="Warn" Message="[errorMessage]" />
           <Sequence DisplayName="Send Email to HelpDesk" sap2010:WorkflowViewState.IdRef="Sequence_79">
-            <ui:SendOutlookMail Account="{x:Null}" Bcc="{x:Null}" Cc="{x:Null}" MailMessage="{x:Null}" TimeoutMS="{x:Null}" Body="[errorMessage + Environment.NewLine + &quot;---------------------------------------------------------&quot; + Environment.NewLine + email.Body.Replace(String.Format(&quot; &lt;mailto:{0}&gt;&quot;, ToEmailAddress), &quot;&quot;).Replace(Environment.NewLine+Environment.NewLine, Environment.NewLine)]" DisplayName="Send Outlook Mail Message" sap2010:WorkflowViewState.IdRef="SendOutlookMail_2" IsBodyHtml="False" IsDraft="False" Subject="Requested copy: Invoice not found" To="[emailHasValidError]">
+            <Assign DisplayName="Create New Kredit Mail" sap2010:WorkflowViewState.IdRef="Assign_57">
+              <Assign.To>
+                <OutArgument x:TypeArguments="snm:MailMessage">[kreditMail]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="snm:MailMessage">[new MailMessage()]</InArgument>
+              </Assign.Value>
+            </Assign>
+            <Assign DisplayName="Assign Mail Subject" sap2010:WorkflowViewState.IdRef="Assign_58">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:String">[kreditMail.Subject]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:String">Requested copy: Invoice not found</InArgument>
+              </Assign.Value>
+            </Assign>
+            <Assign DisplayName="Assign Mail Body" sap2010:WorkflowViewState.IdRef="Assign_59">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:String">[kreditMail.Body]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:String">[errorMessage + Environment.NewLine + "---------------------------------------------------------" + Environment.NewLine + email.Body.Replace(String.Format(" &lt;mailto:{0}&gt;", ToEmailAddress), "").Replace(Environment.NewLine+Environment.NewLine, Environment.NewLine)]</InArgument>
+              </Assign.Value>
+            </Assign>
+            <ui:ForEach x:TypeArguments="x:String" DisplayName="For each" sap2010:WorkflowViewState.IdRef="ForEach`1_2" Values="[AllFilesToSend]">
+              <ui:ForEach.Body>
+                <ActivityAction x:TypeArguments="x:String">
+                  <ActivityAction.Argument>
+                    <DelegateInArgument x:TypeArguments="x:String" Name="file" />
+                  </ActivityAction.Argument>
+                  <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_85">
+                    <Sequence.Variables>
+                      <Variable x:TypeArguments="snm:Attachment" Name="attachment" />
+                      <Variable x:TypeArguments="x:String" Name="renamedAttachment" />
+                    </Sequence.Variables>
+                    <Assign DisplayName="Rename attachment to invoice no" sap2010:WorkflowViewState.IdRef="Assign_63">
+                      <Assign.To>
+                        <OutArgument x:TypeArguments="x:String">[renamedAttachment]</OutArgument>
+                      </Assign.To>
+                      <Assign.Value>
+                        <InArgument x:TypeArguments="x:String">[Regex.Match(file, "\d+").Value + ".pdf"]</InArgument>
+                      </Assign.Value>
+                    </Assign>
+                    <ui:MoveFile ContinueOnError="{x:Null}" Destination="[SAPPDFFolder + &quot;\&quot; + renamedAttachment]" DisplayName="Rename file" sap2010:WorkflowViewState.IdRef="MoveFile_2" Overwrite="False" Path="[SAPPDFFolder + &quot;\&quot; + file]" />
+                    <Assign DisplayName="Create Attachment" sap2010:WorkflowViewState.IdRef="Assign_60">
+                      <Assign.To>
+                        <OutArgument x:TypeArguments="snm:Attachment">[attachment]</OutArgument>
+                      </Assign.To>
+                      <Assign.Value>
+                        <InArgument x:TypeArguments="snm:Attachment">[new Attachment(SAPPDFFolder + "\" + renamedAttachment, System.Net.Mime.MediaTypeNames.Application.Octet)]</InArgument>
+                      </Assign.Value>
+                    </Assign>
+                    <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_14" Text="[&quot;Adding attachment &quot; + renamedAttachment]" />
+                    <InvokeMethod DisplayName="Add Attachment to Kredit Mail" sap2010:WorkflowViewState.IdRef="InvokeMethod_3" MethodName="Add">
+                      <InvokeMethod.TargetObject>
+                        <InArgument x:TypeArguments="snm:AttachmentCollection">[kreditMail.Attachments]</InArgument>
+                      </InvokeMethod.TargetObject>
+                      <InArgument x:TypeArguments="snm:Attachment">[attachment]</InArgument>
+                    </InvokeMethod>
+                  </Sequence>
+                </ActivityAction>
+              </ui:ForEach.Body>
+            </ui:ForEach>
+            <ui:SendOutlookMail Account="{x:Null}" Bcc="{x:Null}" Body="{x:Null}" Cc="{x:Null}" Subject="{x:Null}" TimeoutMS="{x:Null}" DisplayName="Send Outlook Mail Message" sap2010:WorkflowViewState.IdRef="SendOutlookMail_2" IsBodyHtml="False" IsDraft="False" MailMessage="[kreditMail]" To="[emailHasValidError]">
               <ui:SendOutlookMail.Files>
                 <scg:List x:TypeArguments="InArgument(x:String)" Capacity="0" />
               </ui:SendOutlookMail.Files>
             </ui:SendOutlookMail>
+            <InvokeMethod DisplayName="Dispose Kredit Mail" sap2010:WorkflowViewState.IdRef="InvokeMethod_4" MethodName="Dispose">
+              <InvokeMethod.TargetObject>
+                <InArgument x:TypeArguments="snm:MailMessage">[kreditMail]</InArgument>
+              </InvokeMethod.TargetObject>
+            </InvokeMethod>
           </Sequence>
           <Sequence DisplayName="Send Email to Inform Client" sap2010:WorkflowViewState.IdRef="Sequence_81">
             <Sequence.Variables>
               <Variable x:TypeArguments="x:String" Name="mailTemplate" />
             </Sequence.Variables>
-            <ui:ReadTextFile Content="[mailTemplate]" DisplayName="Read Email Template" FileName="EmailNotSuccessTemplate.txt" sap2010:WorkflowViewState.IdRef="ReadTextFile_2" />
+            <ui:ReadTextFile Content="[mailTemplate]" DisplayName="Read Email Template" FileName="[EmailFailureTemplate]" sap2010:WorkflowViewState.IdRef="ReadTextFile_2" />
             <ui:SendOutlookMail Account="{x:Null}" Bcc="{x:Null}" Cc="{x:Null}" MailMessage="{x:Null}" TimeoutMS="{x:Null}" Body="[mailTemplate]" DisplayName="Send Outlook Mail Message" sap2010:WorkflowViewState.IdRef="SendOutlookMail_6" IsBodyHtml="False" IsDraft="False" Subject="Invoices" To="[toEmailAddress]">
               <ui:SendOutlookMail.Files>
                 <scg:List x:TypeArguments="InArgument(x:String)" Capacity="0" />
@@ -219,7 +306,7 @@
         </Sequence>
       </If.Else>
     </If>
-    <sads:DebugSymbol.Symbol>dzFDOlxVc2Vyc1xrZXJtaXRcRGVza3RvcFxQUk9KRUNUXFNlbmRJbnZvaWNlcy54YW1sN3cD3wEOAgEBeAXdAQoCAQJ4dnicAQIBA3oJwgEUAgEexQEJ2wEUAgEFewt7iAECAUh8C8ABFgIBIcEBC8EBiQECAR/GAQvGAYkBAgEcxwELxwGMAQIBGcgBC84BFgIBE88BC9kBFgIBCNoBC9oBigECAQZ7Y3uFAQIBSYEBDYEBsAECAUSCAQ2JARYCAUCKAQ2RARYCATySAQ2ZARYCATeaAQ21ARoCASq2AQ26ASICASW7AQ2/ARwCASLBAWPBAYYBAgEgxgFixgGGAQIBHccBeccBiQECARrJAQ3NASICARTTAQ3TAbMBAgEP1AEN2AEiAgEJ2gFi2gGHAQIBB4EBYoEBfAIBR4EBJoEBNgIBRYcBP4cBUgIBQ4QBQIQBTQIBQY8BOI8BQAIBP4wBOYwBTgIBPZcBOJcBRgIBOpQBOZQBSwIBOJoBgAGaAY8BAgE1oAETsgEeAgErtgGnArYBuQICASi2AZQCtgGjAgIBJr0BP70BTAIBI8kB3gTJAfQEAgEXyQGCAckBrwMCARbJAbcEyQHaBAIBFdMBYtMBfwIBEtMBJtMBNgIBENQBqALUAboCAgEN1AGCAdQBkgECAQvUAZoC1AGkAgIBCqQBFasBHgIBMawBFbEBJAIBLKkBRqkBowECATSmAUemAVMCATKuAVCuAWkCAS+wAUSwAVACAS0=</sads:DebugSymbol.Symbol>
+    <sads:DebugSymbol.Symbol>dztDOlxVc2Vyc1xrZXJtaXRcRG9jdW1lbnRzXFVpUGF0aFxJbnZvaWNlc1xTZW5kSW52b2ljZXMueGFtbFp8A7YCDgIBAX0FtAIKAgECfXZ9nAECAQN/CdIBFAIBSdUBCbICFAIBBYABC4ABiAEDAYIBgQEL0AEWAgFM0QEL0QGJAQIBStkBC9kBiQECAUfaAQvaAYwBAgFE2wELpQIWAgEUpgILsAIWAgEIsQILsQKKAQIBBoABY4ABhQEDAYMBhgENhgGuAQIBfYcBDY4BFgIBeY8BDZYBFgIBdZcBDZ4BFgIBcJ8BDcUBGgIBVcYBDcoBIgIBUMsBDc8BHAIBTdEBY9EBhgECAUvZAWLZAYYBAgFI2gF52gGJAQIBRdwBDeMBFgIBQOQBDesBFgIBPOwBDfMBFgIBOPQBDZoCGgIBHZsCDZ8CIgIBGKACDaQCHAIBFaoCDaoCrgECAQ+rAg2vAiICAQmxAmKxAocBAgEHhgFihgF6AwGAAYYBJoYBNgIBfowBP4wBUgIBfIkBQIkBTQIBepQBOJQBUAIBeJEBOZEBTgIBdpwBOJwBRgIBc5kBOZkBSwIBcZ8BgAGfAY8BAgFupQETwgEeAgFWxgGnAsYBuQICAVPGAZQCxgGjAgIBUc0BP80BTAIBTuEBP+EBUgIBQ94BQN4BTAIBQekBOOkBWQIBP+YBOeYBTQIBPfEBOPEBxQICATvuATnuAUoCATn0AYAB9AGSAQIBNvoBE5cCHgIBHpsCpgKbArwCAgEbmwKUApsCogICARmiAj+iAksCARaqAmKqAnoCARKqAiaqAjYCARCrAqgCqwK6AgIBDasCggGrApIBAgELqwKaAqsCpAICAQqqARWxAR4CAWqyARWyAYYCAgFjswEVugEeAgFfuwEVuwGmAQIBXLwBFcEBJAIBV/8BFYYCHgIBMocCFYcChgICASuIAhWPAh4CASeQAhWQAqYBAgEkkQIVlgIkAgEfrwFArwFpAgFtrAFBrAFUAgFrsgFJsgF9AgFnsgHcAbIBgwICAWS4AUa4AbABAgFitQFHtQFTAgFguwFtuwGjAQIBXb4BUL4BaQIBWsABRMABUAIBWIQCQIQCaQIBNYECQYECVAIBM4cCSYcCfQIBL4cC3AGHAoMCAgEsjQJGjQKwAQIBKooCR4oCUwIBKJACbZACowECASWTAlCTAmgCASKVAkSVAlACASA=</sads:DebugSymbol.Symbol>
   </Sequence>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
@@ -228,19 +315,22 @@
       <sap2010:ViewStateData Id="Assign_53" sap:VirtualizedContainerService.HintSize="314,60" />
       <sap2010:ViewStateData Id="Assign_54" sap:VirtualizedContainerService.HintSize="314,60" />
       <sap2010:ViewStateData Id="Assign_55" sap:VirtualizedContainerService.HintSize="314,60" />
+      <sap2010:ViewStateData Id="Assign_61" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="MoveFile_1" sap:VirtualizedContainerService.HintSize="242,22" />
       <sap2010:ViewStateData Id="Assign_56" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="WriteLine_13" sap:VirtualizedContainerService.HintSize="242,61" />
       <sap2010:ViewStateData Id="InvokeMethod_1" sap:VirtualizedContainerService.HintSize="242,132" />
-      <sap2010:ViewStateData Id="Sequence_84" sap:VirtualizedContainerService.HintSize="264,356">
+      <sap2010:ViewStateData Id="Sequence_84" sap:VirtualizedContainerService.HintSize="264,619">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="ForEach`1_1" sap:VirtualizedContainerService.HintSize="314,490" />
+      <sap2010:ViewStateData Id="ForEach`1_1" sap:VirtualizedContainerService.HintSize="314,753" />
       <sap2010:ViewStateData Id="SendOutlookMail_7" sap:VirtualizedContainerService.HintSize="314,145" />
       <sap2010:ViewStateData Id="InvokeMethod_2" sap:VirtualizedContainerService.HintSize="314,132" />
-      <sap2010:ViewStateData Id="Sequence_83" sap:VirtualizedContainerService.HintSize="336,1370">
+      <sap2010:ViewStateData Id="Sequence_83" sap:VirtualizedContainerService.HintSize="336,1633">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
@@ -248,7 +338,7 @@
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="WriteLine_12" sap:VirtualizedContainerService.HintSize="336,61" />
-      <sap2010:ViewStateData Id="Sequence_82" sap:VirtualizedContainerService.HintSize="358,1696">
+      <sap2010:ViewStateData Id="Sequence_82" sap:VirtualizedContainerService.HintSize="358,1959">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
@@ -257,8 +347,25 @@
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="WriteLine_7" sap:VirtualizedContainerService.HintSize="336,61" />
       <sap2010:ViewStateData Id="LogMessage_32" sap:VirtualizedContainerService.HintSize="336,91" />
+      <sap2010:ViewStateData Id="Assign_57" sap:VirtualizedContainerService.HintSize="314,60" />
+      <sap2010:ViewStateData Id="Assign_58" sap:VirtualizedContainerService.HintSize="314,60" />
+      <sap2010:ViewStateData Id="Assign_59" sap:VirtualizedContainerService.HintSize="314,60" />
+      <sap2010:ViewStateData Id="Assign_63" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="MoveFile_2" sap:VirtualizedContainerService.HintSize="242,22" />
+      <sap2010:ViewStateData Id="Assign_60" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="WriteLine_14" sap:VirtualizedContainerService.HintSize="242,61" />
+      <sap2010:ViewStateData Id="InvokeMethod_3" sap:VirtualizedContainerService.HintSize="242,132" />
+      <sap2010:ViewStateData Id="Sequence_85" sap:VirtualizedContainerService.HintSize="264,619">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="ForEach`1_2" sap:VirtualizedContainerService.HintSize="314,753" />
       <sap2010:ViewStateData Id="SendOutlookMail_2" sap:VirtualizedContainerService.HintSize="314,145" />
-      <sap2010:ViewStateData Id="Sequence_79" sap:VirtualizedContainerService.HintSize="336,269">
+      <sap2010:ViewStateData Id="InvokeMethod_4" sap:VirtualizedContainerService.HintSize="314,132" />
+      <sap2010:ViewStateData Id="Sequence_79" sap:VirtualizedContainerService.HintSize="336,1534">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
@@ -275,21 +382,21 @@
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="WriteLine_9" sap:VirtualizedContainerService.HintSize="336,61" />
-      <sap2010:ViewStateData Id="Sequence_74" sap:VirtualizedContainerService.HintSize="358,1134">
+      <sap2010:ViewStateData Id="Sequence_74" sap:VirtualizedContainerService.HintSize="358,2399">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="If_3" sap:VirtualizedContainerService.HintSize="741,1871">
+      <sap2010:ViewStateData Id="If_3" sap:VirtualizedContainerService.HintSize="741,2574">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Sequence_73" sap:VirtualizedContainerService.HintSize="763,1995">
+      <sap2010:ViewStateData Id="Sequence_73" sap:VirtualizedContainerService.HintSize="763,2698">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -297,7 +404,7 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="SendInvoices_1" sap:VirtualizedContainerService.HintSize="803,2115" />
+      <sap2010:ViewStateData Id="SendInvoices_1" sap:VirtualizedContainerService.HintSize="803,2898" />
     </sap2010:ViewStateManager>
   </sap2010:WorkflowViewState.ViewStateManager>
 </Activity>

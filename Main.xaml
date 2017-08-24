@@ -99,9 +99,12 @@
           <Literal x:TypeArguments="x:String" Value="" />
         </Variable.Default>
       </Variable>
+      <Variable x:TypeArguments="x:String" Name="successClientEmailBody" />
+      <Variable x:TypeArguments="x:String" Name="failureClientEmailBody" />
+      <Variable x:TypeArguments="x:String" Name="toEmailAddress" />
     </Flowchart.Variables>
     <Flowchart.StartNode>
-      <FlowStep x:Name="__ReferenceID1" sap2010:WorkflowViewState.IdRef="FlowStep_2">
+      <FlowStep x:Name="__ReferenceID6" sap2010:WorkflowViewState.IdRef="FlowStep_2">
         <Sequence sap2010:Annotation.AnnotationText="Reads init parameters values from settings.json file" DisplayName="Read Settings File" sap2010:WorkflowViewState.IdRef="Sequence_2">
           <Sequence.Variables>
             <Variable x:TypeArguments="x:String" Name="settingsString" />
@@ -256,6 +259,22 @@
                     <InArgument x:TypeArguments="x:String">[settingsJson.GetValue("errorMailCC").ToString()]</InArgument>
                   </Assign.Value>
                 </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_57">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[successClientEmailBody]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[settingsJson.GetValue("successClientEmailBody").ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_58">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[failureClientEmailBody]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[settingsJson.GetValue("failureClientEmailBody").ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
               </Sequence>
             </TryCatch.Try>
             <TryCatch.Catches>
@@ -282,20 +301,21 @@
           </TryCatch>
         </Sequence>
         <FlowStep.Next>
-          <FlowStep x:Name="__ReferenceID0" sap2010:WorkflowViewState.IdRef="FlowStep_5">
-            <ui:GetOutlookMailMessages TimeoutMS="{x:Null}" Account="[mailAccount]" sap2010:Annotation.AnnotationText="Takes top 1 email from inbox" DisplayName="Get outlook mail messages" Filter="[Subject] = 'The Form ''Request for invoice'' was submitted' Or [Subject] = 'Requested copy: Invoice not found'" GetAttachements="False" sap2010:WorkflowViewState.IdRef="GetOutlookMailMessages_1" MailFolder="[mailFolder]" MarkAsRead="True" Messages="[mailMessages]" OnlyUnreadMessages="False" Top="1" />
+          <FlowStep x:Name="__ReferenceID5" sap2010:WorkflowViewState.IdRef="FlowStep_5">
+            <ui:GetOutlookMailMessages TimeoutMS="{x:Null}" Account="[mailAccount]" sap2010:Annotation.AnnotationText="Takes top 1 email from inbox" DisplayName="Get outlook mail messages" Filter="[Subject] = 'The Form ''Request for invoice'' was submitted' Or [Subject] = 'Requested copy: Invoice not found' Or [Subject] = 'Potential SPAM:The Form ''Request for invoice'' was submitted'" GetAttachements="False" sap2010:WorkflowViewState.IdRef="GetOutlookMailMessages_1" MailFolder="[mailFolder]" MarkAsRead="True" Messages="[mailMessages]" OnlyUnreadMessages="False" Top="1" />
             <FlowStep.Next>
-              <FlowDecision x:Name="__ReferenceID2" sap2010:Annotation.AnnotationText="Email found?" Condition="[mailMessages.Count() &gt; 0]" sap2010:WorkflowViewState.IdRef="FlowDecision_3">
+              <FlowDecision x:Name="__ReferenceID7" sap2010:Annotation.AnnotationText="Email found?" Condition="[mailMessages.Count() &gt; 0]" sap2010:WorkflowViewState.IdRef="FlowDecision_3">
                 <FlowDecision.True>
-                  <FlowStep x:Name="__ReferenceID4" sap2010:WorkflowViewState.IdRef="FlowStep_45">
+                  <FlowStep x:Name="__ReferenceID9" sap2010:WorkflowViewState.IdRef="FlowStep_45">
                     <Sequence sap2010:Annotation.AnnotationText="Reading email, getting Invoices from SAP and sending them to a client" DisplayName="Process Email" sap2010:WorkflowViewState.IdRef="Sequence_45">
                       <Sequence.Variables>
-                        <Variable x:TypeArguments="x:String" Name="toEmailAddress" />
                         <Variable x:TypeArguments="x:String" Name="invoicesString" />
                         <Variable x:TypeArguments="scg:List(x:Int64)" Default="[new List(of Long)]" Name="invoicesList" />
                         <Variable x:TypeArguments="scg:List(x:Int64)" Default="[new List(of Long)]" Name="customerIdList" />
                         <Variable x:TypeArguments="x:String" Name="errorMessage" />
                         <Variable x:TypeArguments="scg:List(x:String)" Default="[new List(of String)]" Name="filesToSend" />
+                        <Variable x:TypeArguments="scg:List(x:String)" Name="allFilesToSend" />
+                        <Variable x:TypeArguments="x:Boolean" Name="canGetAllCustomers" />
                       </Sequence.Variables>
                       <TryCatch DisplayName="Try catch" sap2010:WorkflowViewState.IdRef="TryCatch_9">
                         <TryCatch.Try>
@@ -339,6 +359,7 @@
                                           <InArgument x:TypeArguments="x:String" x:Key="ExcelFilePath">[excelFilePath]</InArgument>
                                           <InArgument x:TypeArguments="x:String" x:Key="ToEmail">[toEmailAddress]</InArgument>
                                           <OutArgument x:TypeArguments="scg:List(x:Int64)" x:Key="CustomerIdList">[customerIdList]</OutArgument>
+                                          <OutArgument x:TypeArguments="x:Boolean" x:Key="CanGetAllCustomers">[canGetAllCustomers]</OutArgument>
                                         </ui:InvokeWorkflowFile.Arguments>
                                       </ui:InvokeWorkflowFile>
                                     </Sequence>
@@ -370,6 +391,8 @@
                                           <InArgument x:TypeArguments="x:String" x:Key="SAPPDFFolder">[sapPDFFolder]</InArgument>
                                           <OutArgument x:TypeArguments="x:String" x:Key="ErrorMessage">[errorMessage]</OutArgument>
                                           <OutArgument x:TypeArguments="scg:List(x:String)" x:Key="FilesToSend">[filesToSend]</OutArgument>
+                                          <OutArgument x:TypeArguments="scg:List(x:String)" x:Key="AllFilesToSend">[allFilesToSend]</OutArgument>
+                                          <InArgument x:TypeArguments="x:Boolean" x:Key="CanGetAllCustomers">[canGetAllCustomers]</InArgument>
                                         </ui:InvokeWorkflowFile.Arguments>
                                       </ui:InvokeWorkflowFile>
                                     </Sequence>
@@ -382,6 +405,9 @@
                                           <InArgument x:TypeArguments="x:String" x:Key="EmailHasValidError">[emailHasValidError]</InArgument>
                                           <InArgument x:TypeArguments="scg:List(x:String)" x:Key="FilesToSend">[filesToSend]</InArgument>
                                           <InArgument x:TypeArguments="x:String" x:Key="SAPPDFFolder">[sapPDFFolder]</InArgument>
+                                          <InArgument x:TypeArguments="scg:List(x:String)" x:Key="AllFilesToSend">[allFilesToSend]</InArgument>
+                                          <InArgument x:TypeArguments="x:String" x:Key="EmailSuccessTemplate">[successClientEmailBody]</InArgument>
+                                          <InArgument x:TypeArguments="x:String" x:Key="EmailFailureTemplate">[failureClientEmailBody]</InArgument>
                                         </ui:InvokeWorkflowFile.Arguments>
                                       </ui:InvokeWorkflowFile>
                                     </Sequence>
@@ -426,41 +452,68 @@
                       </TryCatch>
                     </Sequence>
                     <FlowStep.Next>
-                      <FlowStep x:Name="__ReferenceID5" sap2010:WorkflowViewState.IdRef="FlowStep_47">
-                        <Sequence sap2010:Annotation.AnnotationText="Moves email to appropriate mailbox folder and if error was thrown, send error email" DisplayName="Handle Error" sap2010:WorkflowViewState.IdRef="Sequence_89">
-                          <If Condition="[thrownError IsNot Nothing]" sap2010:WorkflowViewState.IdRef="If_3">
-                            <If.Then>
-                              <Sequence sap2010:WorkflowViewState.IdRef="Sequence_88">
-                                <ui:InvokeWorkflowFile ContinueOnError="{x:Null}" DisplayName="Invoke errorHandling workflow" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_12" UnSafe="False" WorkflowFileName="ErrorHandling.xaml">
-                                  <ui:InvokeWorkflowFile.Arguments>
-                                    <InArgument x:TypeArguments="x:String" x:Key="errorMailAccount">[errorMailAccount]</InArgument>
-                                    <InArgument x:TypeArguments="snm:MailMessage" x:Key="message">[email]</InArgument>
-                                    <InOutArgument x:TypeArguments="s:Exception" x:Key="thrownError">[thrownError]</InOutArgument>
-                                    <InArgument x:TypeArguments="x:String" x:Key="errorMailCC">[errorMailCC]</InArgument>
-                                  </ui:InvokeWorkflowFile.Arguments>
-                                </ui:InvokeWorkflowFile>
-                                <ui:MoveOutlookMessage Account="[mailAccount]" DisplayName="Move Mail to Forwarded Folder" sap2010:WorkflowViewState.IdRef="MoveOutlookMessage_1" MailFolder="[errorMailFolder]" MailMessage="[email]" />
-                              </Sequence>
-                            </If.Then>
-                            <If.Else>
-                              <ui:MoveOutlookMessage Account="[mailAccount]" DisplayName="Move Mail to Processed Folder" sap2010:WorkflowViewState.IdRef="MoveOutlookMessage_2" MailFolder="[processedMailFolder]" MailMessage="[email]" />
-                            </If.Else>
-                          </If>
-                        </Sequence>
-                        <FlowStep.Next>
+                      <FlowStep x:Name="__ReferenceID10" sap2010:WorkflowViewState.IdRef="FlowStep_54">
+                        <Flowchart sap2010:Annotation.AnnotationText="Moves email to appropriate mailbox folder and if error was thrown, send error email" DisplayName="Handle Error" sap2010:WorkflowViewState.IdRef="Flowchart_3">
+                          <Flowchart.StartNode>
+                            <FlowDecision x:Name="__ReferenceID0" Condition="[thrownError IsNot Nothing]" DisplayName="Error was thrown?" sap2010:WorkflowViewState.IdRef="FlowDecision_7">
+                              <FlowDecision.True>
+                                <FlowDecision x:Name="__ReferenceID2" Condition="[thrownError.Message.Contains(&quot;Kredit:&quot;)]" DisplayName="Send to Kredit?" sap2010:WorkflowViewState.IdRef="FlowDecision_6">
+                                  <FlowDecision.True>
+                                    <FlowStep x:Name="__ReferenceID4" sap2010:WorkflowViewState.IdRef="FlowStep_51">
+                                      <Sequence DisplayName="Send Error to Kredit" sap2010:WorkflowViewState.IdRef="Sequence_92">
+                                        <ui:SendOutlookMail Account="{x:Null}" Bcc="{x:Null}" MailMessage="{x:Null}" TimeoutMS="{x:Null}" Body="[thrownError.Message.Replace(&quot;Kredit:&quot;, &quot;&quot;).Trim + Environment.NewLine + &quot;---------------------------------------------------------&quot; + Environment.NewLine + email.Body.Replace(String.Format(&quot; &lt;mailto:{0}&gt;&quot;, toEmailAddress), &quot;&quot;).Replace(Environment.NewLine+Environment.NewLine, Environment.NewLine)]" Cc="[errorMailCC]" DisplayName="Send Outlook Mail Message" sap2010:WorkflowViewState.IdRef="SendOutlookMail_2" IsBodyHtml="False" IsDraft="False" Subject="Requested copy: Invoice not found" To="[emailHasValidError]">
+                                          <ui:SendOutlookMail.Files>
+                                            <scg:List x:TypeArguments="InArgument(x:String)" Capacity="0" />
+                                          </ui:SendOutlookMail.Files>
+                                        </ui:SendOutlookMail>
+                                        <ui:MoveOutlookMessage Account="[mailAccount]" DisplayName="Move Mail to Forwarded Folder" sap2010:WorkflowViewState.IdRef="MoveOutlookMessage_6" MailFolder="[processedMailFolder]" MailMessage="[email]" />
+                                      </Sequence>
+                                    </FlowStep>
+                                  </FlowDecision.True>
+                                  <FlowDecision.False>
+                                    <FlowStep x:Name="__ReferenceID3" sap2010:WorkflowViewState.IdRef="FlowStep_52">
+                                      <Sequence DisplayName="Send Error to Kermit" sap2010:WorkflowViewState.IdRef="Sequence_93">
+                                        <ui:InvokeWorkflowFile ContinueOnError="{x:Null}" DisplayName="Invoke errorHandling workflow" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_16" UnSafe="False" WorkflowFileName="ErrorHandling.xaml">
+                                          <ui:InvokeWorkflowFile.Arguments>
+                                            <InArgument x:TypeArguments="x:String" x:Key="errorMailAccount">[errorMailAccount]</InArgument>
+                                            <InArgument x:TypeArguments="snm:MailMessage" x:Key="message">[email]</InArgument>
+                                            <InOutArgument x:TypeArguments="s:Exception" x:Key="thrownError">[thrownError]</InOutArgument>
+                                            <InArgument x:TypeArguments="x:String" x:Key="errorMailCC">[errorMailCC]</InArgument>
+                                          </ui:InvokeWorkflowFile.Arguments>
+                                        </ui:InvokeWorkflowFile>
+                                        <ui:MoveOutlookMessage Account="[mailAccount]" DisplayName="Move Mail to Forwarded Folder" sap2010:WorkflowViewState.IdRef="MoveOutlookMessage_7" MailFolder="[errorMailFolder]" MailMessage="[email]" />
+                                      </Sequence>
+                                    </FlowStep>
+                                  </FlowDecision.False>
+                                </FlowDecision>
+                              </FlowDecision.True>
+                              <FlowDecision.False>
+                                <FlowStep x:Name="__ReferenceID1" sap2010:WorkflowViewState.IdRef="FlowStep_53">
+                                  <ui:MoveOutlookMessage Account="[mailAccount]" DisplayName="Move Mail to Processed Folder" sap2010:WorkflowViewState.IdRef="MoveOutlookMessage_8" MailFolder="[processedMailFolder]" MailMessage="[email]" />
+                                </FlowStep>
+                              </FlowDecision.False>
+                            </FlowDecision>
+                          </Flowchart.StartNode>
                           <x:Reference>__ReferenceID0</x:Reference>
+                          <x:Reference>__ReferenceID1</x:Reference>
+                          <x:Reference>__ReferenceID2</x:Reference>
+                          <x:Reference>__ReferenceID3</x:Reference>
+                          <x:Reference>__ReferenceID4</x:Reference>
+                        </Flowchart>
+                        <FlowStep.Next>
+                          <x:Reference>__ReferenceID5</x:Reference>
                         </FlowStep.Next>
                       </FlowStep>
                     </FlowStep.Next>
                   </FlowStep>
                 </FlowDecision.True>
                 <FlowDecision.False>
-                  <FlowStep x:Name="__ReferenceID3" sap2010:WorkflowViewState.IdRef="FlowStep_9">
+                  <FlowStep x:Name="__ReferenceID8" sap2010:WorkflowViewState.IdRef="FlowStep_9">
                     <Sequence DisplayName="Wait 10 min" sap2010:WorkflowViewState.IdRef="Sequence_7">
                       <Delay Duration="00:00:10" sap2010:WorkflowViewState.IdRef="Delay_1" />
                     </Sequence>
                     <FlowStep.Next>
-                      <x:Reference>__ReferenceID0</x:Reference>
+                      <x:Reference>__ReferenceID5</x:Reference>
                     </FlowStep.Next>
                   </FlowStep>
                 </FlowDecision.False>
@@ -470,13 +523,13 @@
         </FlowStep.Next>
       </FlowStep>
     </Flowchart.StartNode>
-    <x:Reference>__ReferenceID1</x:Reference>
-    <x:Reference>__ReferenceID0</x:Reference>
-    <x:Reference>__ReferenceID2</x:Reference>
-    <x:Reference>__ReferenceID3</x:Reference>
-    <x:Reference>__ReferenceID4</x:Reference>
+    <x:Reference>__ReferenceID6</x:Reference>
     <x:Reference>__ReferenceID5</x:Reference>
-    <sads:DebugSymbol.Symbol>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</sads:DebugSymbol.Symbol>
+    <x:Reference>__ReferenceID7</x:Reference>
+    <x:Reference>__ReferenceID8</x:Reference>
+    <x:Reference>__ReferenceID9</x:Reference>
+    <x:Reference>__ReferenceID10</x:Reference>
+    <sads:DebugSymbol.Symbol>dzNDOlxVc2Vyc1xrZXJtaXRcRG9jdW1lbnRzXFVpUGF0aFxJbnZvaWNlc1xNYWluLnhhbWzLAUcDlQQPAgEBXgteOgIBA2MLYzoCAQJsCa4CFAMBvgGxAg2xAsQEAwG1AbMCcLMCjwEDAbMBgAQVggQgAwGwAbYCFcUDIAIBMcgDGfYDJQIBBHELrQIWAwG/AbECvgSxAsEEAwG9AbECRbECVAMBuwGxAsUBsQKFAwMBugGxAo4EsQKeBAMBuAGxAuQDsQLyAwMBtgGBBBeBBF4DAbEBuQJPuQJkAgE0ugJPugJkAgEzvAJQvAJnAgEywAIXxAMiAgE1ygNNygNqAgEv7AMj7APwAQIBKMwDUcwDhgECASbbAyflAzICARTPAyfWAzICAQVzD5YCGgMBywGeAhOpAh4DAcABgQQngQQxAwGyAcICG6IDJgIBSLkDG8IDJgIBQKoDH7QDKgIBNuwDQuwDUQIBLewD5AHsA+0BAgEr7APAAewD1wECASncAynjA0ECARzkAynkA/IBAgEV0AMp1AM+AgEN1QMp1QP2AQIBBnQRdKYBAwGhAnURddQBAwGcAnYRfRoDAZgCfhGFARoDAZQChgERjQEaAwGQAo4BEZUBGgMBjAKWARGdARoDAYgCngERpQEaAwGEAqYBEa0BGgMBgAKuARG1ARoDAfwBtgERvQEaAwH4Ab4BEcUBGgMB9AHGARHNARoDAfABzgER1QEaAwHsAdYBEd0BGgMB6AHeARHlARoDAeQB5gER7QEaAwHgAe4BEfUBGgMB3AH2ARH9ARoDAdgB/gERhQIaAwHUAYYCEY0CGgMB0AGOAhGVAhoDAcwBnwIVpgIeAwHGAacCFacCnQIDAcQBqAIVqAJ9AwHBAcMCHcMCqAEDAa4BxAIdywImAwGqAcwCHdUCKAMBnwHWAh2hAygCAUm6Ax3AAygCAUPBAx3BA6kBAgFBqwMhsgMqAgE7swMhswPTAQIBN+ADbuADewIBJN4Dbd4DfwIBIuEDaOEDdQIBINwD3wHcA/MBAgEf3wNr3wNyAgEd5ANI5ANXAgEa5APmAeQD7wECARjkA8YB5APZAQIBFtADtgXQA8wFAgES0AP4A9ADhwQCARDQA5AB0AP0AwIBD9ADjwXQA7IFAgEO1QNI1QNXAgEL1QPqAdUD8wECAQnVA8YB1QPdAQIBB3RjdHIDAaQCdCp0PAMBogJ1vwF10QEDAZ8CdaMBdbMBAwGdAns8e2wDAZsCeD14SQMBmQKDATyDAW0DAZcCgAE9gAFKAwGVAosBPIsBbwMBkwKIAT2IAUwDAZECkwE8kwF0AwGPApABPZABUQMBjQKbATybAW8DAYsCmAE9mAFMAwGJAqMBO6MBdgMBhwKgATygAU0DAYUCqwE7qwF3AwGDAqgBPKgBTgMBgQKzATyzAWsDAf8BsAE9sAFIAwH9AbsBPLsBaQMB+wG4AT24AUYDAfkBwwE8wwFtAwH3AcABPcABSgMB9QHLATzLAWwDAfMByAE9yAFJAwHxAdMBPNMBdgMB7wHQAT3QAVMDAe0B2wE82wFuAwHrAdgBPdgBSwMB6QHjATzjAXQDAecB4AE94AFRAwHlAesBPOsBdQMB4wHoAT3oAVIDAeEB8wE88wFxAwHfAfABPfABTgMB3QH7ATz7AXIDAdsB+AE9+AFPAwHZAYMCPIMCbQMB1wGAAj2AAkoDAdUBiwI8iwJ4AwHTAYgCPYgCVQMB0QGTAjyTAngDAc8BkAI9kAJVAwHNAaQCQ6QCTgMByQGhAkShAlEDAccBpwKDAacCmgIDAcUBqAJDqAJQAwHCAcMCiwHDAqUBAwGvAckCT8kCbgMBrQHGAlDGAlcDAasBzQIf1AI3AwGgAdcCH6ADJAIBSrsDH78DNwIBRMEDiwHBA6YBAgFCsANPsANaAgE+rQNQrQNdAgE8swOQAbMD0AECATjRAmLRAnIDAagB0AJi0AJyAwGmAc8CX88CZgMBpAHSAmnSAncDAaIBzQLbAc0C9gEDAaEB1wIt1wKhAQIBS9kCI+ACLgMBlAHjAiOeAy4CAUy9A1m9A2cCAUa7A8sBuwPdAQIBRdoCJd4COgMBmAHfAiXfAskBAwGVAeQCJe0CMAMBiQHuAiX6AjACAXj7AiWBAzACAXOCAyWOAzACAWKPAyWdAzACAU3aAsUC2gLbAgMBnQHaApoB2gKoAQMBmwHaArAC2gLBAgMBmQHfApMB3wLGAQMBlgHlAifsAj8DAYoB7wIn+QI/AgF5/AIngAM/AgF0gwMnjQM/AgFjkAMnnAM/AgFO6QJz6QKDAQMBkgHnAmjnAncDAZAB6gJv6gKDAQMBjgHlAuQB5QKAAgMBjQHoAmLoAnIDAYsB9QJs9QKCAQMBhwH2AmT2AnIDAYUB9wJp9wJ5AwGDAfICX/ICaAMBgQHxAmHxAmwCAX/0AmL0Am4CAX3zAmPzAnACAXvvAt4B7wL0AQIBev4CZP4CcgIBdvwC3QH8AvIBAgF1hgNyhgOCAQIBcYcDZ4cDdQIBb4gDaIgDdgIBbYoDdIoDhAECAWuFA3CFA34CAWmLA26LA4IBAgFniQNxiQN+AgFlgwPhAYMD+gECAWSVA22VA4EBAgFgkwNpkwN5AgFelANnlANuAgFclwNnlwN1AgFakgNnkgN1AgFYmQNvmQOHAQIBVpgDc5gDgwECAVSWA3CWA30CAVKQA9wBkAPvAQIBUZoDb5oDhwECAU8=</sads:DebugSymbol.Symbol>
   </Flowchart>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
@@ -500,7 +553,9 @@
       <sap2010:ViewStateData Id="Assign_54" sap:VirtualizedContainerService.HintSize="314,60" />
       <sap2010:ViewStateData Id="Assign_55" sap:VirtualizedContainerService.HintSize="314,60" />
       <sap2010:ViewStateData Id="Assign_56" sap:VirtualizedContainerService.HintSize="314,60" />
-      <sap2010:ViewStateData Id="Sequence_3" sap:VirtualizedContainerService.HintSize="336,2068">
+      <sap2010:ViewStateData Id="Assign_57" sap:VirtualizedContainerService.HintSize="314,60" />
+      <sap2010:ViewStateData Id="Assign_58" sap:VirtualizedContainerService.HintSize="314,60" />
+      <sap2010:ViewStateData Id="Sequence_3" sap:VirtualizedContainerService.HintSize="336,2283">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
@@ -510,22 +565,22 @@
       <sap2010:ViewStateData Id="Assign_3" sap:VirtualizedContainerService.HintSize="314,60" />
       <sap2010:ViewStateData Id="LogMessage_1" sap:VirtualizedContainerService.HintSize="314,91" />
       <sap2010:ViewStateData Id="Throw_1" sap:VirtualizedContainerService.HintSize="314,22" />
-      <sap2010:ViewStateData Id="Sequence_4" sap:VirtualizedContainerService.HintSize="336,377">
+      <sap2010:ViewStateData Id="Sequence_4" sap:VirtualizedContainerService.HintSize="336,374">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Catch`1_1" sap:VirtualizedContainerService.HintSize="400,446">
+      <sap2010:ViewStateData Id="Catch`1_1" sap:VirtualizedContainerService.HintSize="404,21">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
             <x:Boolean x:Key="IsPinned">False</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="TryCatch_1" sap:VirtualizedContainerService.HintSize="414,608" />
+      <sap2010:ViewStateData Id="TryCatch_1" sap:VirtualizedContainerService.HintSize="418,2510" />
       <sap2010:ViewStateData Id="Sequence_2" sap:VirtualizedContainerService.HintSize="200,93">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
@@ -545,7 +600,7 @@
       <sap2010:ViewStateData Id="LogMessage_28" sap:VirtualizedContainerService.HintSize="605,91" />
       <sap2010:ViewStateData Id="Assign_30" sap:VirtualizedContainerService.HintSize="605,60" />
       <sap2010:ViewStateData Id="InvokeWorkflowFile_2" sap:VirtualizedContainerService.HintSize="314,87" />
-      <sap2010:ViewStateData Id="Sequence_46" sap:VirtualizedContainerService.HintSize="336,238">
+      <sap2010:ViewStateData Id="Sequence_46" sap:VirtualizedContainerService.HintSize="605,93">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -574,7 +629,7 @@
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="InvokeWorkflowFile_5" sap:VirtualizedContainerService.HintSize="314,87" />
-      <sap2010:ViewStateData Id="Sequence_61" sap:VirtualizedContainerService.HintSize="200,108">
+      <sap2010:ViewStateData Id="Sequence_61" sap:VirtualizedContainerService.HintSize="336,253">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -680,27 +735,85 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="InvokeWorkflowFile_12" sap:VirtualizedContainerService.HintSize="314,87" />
-      <sap2010:ViewStateData Id="MoveOutlookMessage_1" sap:VirtualizedContainerService.HintSize="314,87" />
-      <sap2010:ViewStateData Id="Sequence_88" sap:VirtualizedContainerService.HintSize="336,338">
+      <sap2010:ViewStateData Id="SendOutlookMail_2" sap:VirtualizedContainerService.HintSize="314,145" />
+      <sap2010:ViewStateData Id="MoveOutlookMessage_6" sap:VirtualizedContainerService.HintSize="314,87" />
+      <sap2010:ViewStateData Id="Sequence_92" sap:VirtualizedContainerService.HintSize="336,396">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="MoveOutlookMessage_2" sap:VirtualizedContainerService.HintSize="314,87" />
-      <sap2010:ViewStateData Id="If_3" sap:VirtualizedContainerService.HintSize="675,486" />
-      <sap2010:ViewStateData Id="Sequence_89" sap:VirtualizedContainerService.HintSize="200,108">
+      <sap2010:ViewStateData Id="FlowStep_51">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
-            <x:Boolean x:Key="IsPinned">False</x:Boolean>
-            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+            <av:Point x:Key="ShapeLocation">30,374.5</av:Point>
+            <av:Size x:Key="ShapeSize">200,51</av:Size>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="FlowStep_47">
+      <sap2010:ViewStateData Id="InvokeWorkflowFile_16" sap:VirtualizedContainerService.HintSize="314,87" />
+      <sap2010:ViewStateData Id="MoveOutlookMessage_7" sap:VirtualizedContainerService.HintSize="314,87" />
+      <sap2010:ViewStateData Id="Sequence_93" sap:VirtualizedContainerService.HintSize="200,51">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_52">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">360,374.5</av:Point>
+            <av:Size x:Key="ShapeSize">200,51</av:Size>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowDecision_6" sap:VirtualizedContainerService.HintSize="87,87">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <av:Point x:Key="ShapeLocation">255,286.5</av:Point>
+            <av:Size x:Key="ShapeSize">87,87</av:Size>
+            <av:PointCollection x:Key="FalseConnector">342,330 460,330 460,374.5</av:PointCollection>
+            <av:PointCollection x:Key="TrueConnector">255,330 130,330 130,374.5</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="MoveOutlookMessage_8" sap:VirtualizedContainerService.HintSize="200,51" />
+      <sap2010:ViewStateData Id="FlowStep_53">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">380,224.5</av:Point>
+            <av:Size x:Key="ShapeSize">200,51</av:Size>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowDecision_7" sap:VirtualizedContainerService.HintSize="102,87">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <av:Point x:Key="ShapeLocation">249,126.5</av:Point>
+            <av:Size x:Key="ShapeSize">102,87</av:Size>
+            <av:PointCollection x:Key="FalseConnector">351,170 480,170 480,224.5</av:PointCollection>
+            <av:PointCollection x:Key="TrueConnector">249,170 238.5,170 238.5,256.5 298.5,256.5 298.5,286.5</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Flowchart_3" sap:VirtualizedContainerService.HintSize="616,663">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <av:Point x:Key="ShapeLocation">270,2.5</av:Point>
+            <av:Size x:Key="ShapeSize">60,75</av:Size>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+            <av:PointCollection x:Key="ConnectorLocation">300,77.5 300,126.5</av:PointCollection>
+            <x:Double x:Key="Width">602</x:Double>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_54">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <av:Point x:Key="ShapeLocation">30,256</av:Point>
@@ -776,7 +889,7 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Main_1" sap:VirtualizedContainerService.HintSize="830,716" />
+      <sap2010:ViewStateData Id="Main_1" sap:VirtualizedContainerService.HintSize="830,756" />
     </sap2010:ViewStateManager>
   </sap2010:WorkflowViewState.ViewStateManager>
 </Activity>

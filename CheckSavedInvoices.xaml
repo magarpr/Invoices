@@ -19,6 +19,8 @@
     <x:Property Name="SAPPDFFolder" Type="InArgument(x:String)" />
     <x:Property Name="ErrorMessage" Type="OutArgument(x:String)" />
     <x:Property Name="FilesToSend" Type="OutArgument(scg:List(x:String))" />
+    <x:Property Name="AllFilesToSend" Type="OutArgument(scg:List(x:String))" />
+    <x:Property Name="CanGetAllCustomers" Type="InArgument(x:Boolean)" />
   </x:Members>
   <mva:VisualBasic.Settings>
     <x:Null />
@@ -163,14 +165,21 @@
           <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)">[new Dictionary(Of String, String)]</InArgument>
         </Assign.Value>
       </Assign>
-      <Assign>
+      <Assign sap2010:WorkflowViewState.IdRef="Assign_53">
         <Assign.To>
           <OutArgument x:TypeArguments="scg:List(x:String)">[FilesToSend]</OutArgument>
         </Assign.To>
         <Assign.Value>
           <InArgument x:TypeArguments="scg:List(x:String)">[new List(of String)]</InArgument>
         </Assign.Value>
-        <sap2010:WorkflowViewState.IdRef>Assign_53</sap2010:WorkflowViewState.IdRef>
+      </Assign>
+      <Assign sap2010:WorkflowViewState.IdRef="Assign_54">
+        <Assign.To>
+          <OutArgument x:TypeArguments="scg:List(x:String)">[AllFilesToSend]</OutArgument>
+        </Assign.To>
+        <Assign.Value>
+          <InArgument x:TypeArguments="scg:List(x:String)">[new List(of String)]</InArgument>
+        </Assign.Value>
       </Assign>
       <ui:ForEach x:TypeArguments="x:String" sap2010:Annotation.AnnotationText="Get a dictionary of saved invoices and customers no" DisplayName="For each" sap2010:WorkflowViewState.IdRef="ForEach`1_1" Values="[files]">
         <ui:ForEach.Body>
@@ -206,25 +215,30 @@
                     <FlowStep.Next>
                       <FlowDecision x:Name="__ReferenceID0" Condition="[invoiceFound]" DisplayName="Invoice found?" sap2010:WorkflowViewState.IdRef="FlowDecision_4">
                         <FlowDecision.True>
-                          <FlowDecision x:Name="__ReferenceID3" Condition="[CustomerIdList.Contains(Int64.Parse(customerId))]" DisplayName="Customer has rights to get it?" sap2010:WorkflowViewState.IdRef="FlowDecision_5">
-                            <FlowDecision.True>
-                              <FlowStep x:Name="__ReferenceID5" sap2010:WorkflowViewState.IdRef="FlowStep_56">
-                                <AddToCollection x:TypeArguments="x:String" Collection="[FilesToSend]" DisplayName="Add to Files to Send Collection" sap2010:WorkflowViewState.IdRef="AddToCollection`1_1" Item="[String.Format(&quot;[{0}].[{1}].pdf&quot;, item.ToString, customerId)]" />
-                              </FlowStep>
-                            </FlowDecision.True>
-                            <FlowDecision.False>
-                              <FlowStep x:Name="__ReferenceID4" sap2010:WorkflowViewState.IdRef="FlowStep_55">
-                                <Assign sap2010:WorkflowViewState.IdRef="Assign_52">
-                                  <Assign.To>
-                                    <OutArgument x:TypeArguments="x:String">[ErrorMessage]</OutArgument>
-                                  </Assign.To>
-                                  <Assign.Value>
-                                    <InArgument x:TypeArguments="x:String">[ErrorMessage + String.Format("Customer can't get Invoice {0}, because he doesn't have rights to access Customers {1} invoices.{2}", item.ToString, customerId, Environment.NewLine)]</InArgument>
-                                  </Assign.Value>
-                                </Assign>
-                              </FlowStep>
-                            </FlowDecision.False>
-                          </FlowDecision>
+                          <FlowStep x:Name="__ReferenceID6" sap2010:WorkflowViewState.IdRef="FlowStep_57">
+                            <AddToCollection x:TypeArguments="x:String" sap2010:Annotation.AnnotationText="For HelpDesk send every invoice if somethnig wrong" Collection="[AllFilesToSend]" DisplayName="Add to Files to Send Collection" sap2010:WorkflowViewState.IdRef="AddToCollection`1_2" Item="[String.Format(&quot;[{0}].[{1}].pdf&quot;, item.ToString, customerId)]" />
+                            <FlowStep.Next>
+                              <FlowDecision x:Name="__ReferenceID3" Condition="[CustomerIdList.Contains(Int64.Parse(customerId)) Or CanGetAllCustomers]" DisplayName="Customer has rights to get it?" sap2010:WorkflowViewState.IdRef="FlowDecision_5">
+                                <FlowDecision.True>
+                                  <FlowStep x:Name="__ReferenceID5" sap2010:WorkflowViewState.IdRef="FlowStep_56">
+                                    <AddToCollection x:TypeArguments="x:String" sap2010:Annotation.AnnotationText="Send invoices to customer if all of them are found" Collection="[FilesToSend]" DisplayName="Add to Files to Send Collection" sap2010:WorkflowViewState.IdRef="AddToCollection`1_1" Item="[String.Format(&quot;[{0}].[{1}].pdf&quot;, item.ToString, customerId)]" />
+                                  </FlowStep>
+                                </FlowDecision.True>
+                                <FlowDecision.False>
+                                  <FlowStep x:Name="__ReferenceID4" sap2010:WorkflowViewState.IdRef="FlowStep_55">
+                                    <Assign sap2010:WorkflowViewState.IdRef="Assign_52">
+                                      <Assign.To>
+                                        <OutArgument x:TypeArguments="x:String">[ErrorMessage]</OutArgument>
+                                      </Assign.To>
+                                      <Assign.Value>
+                                        <InArgument x:TypeArguments="x:String">[ErrorMessage + String.Format("Customer can't get Invoice {0}, because he doesn't have rights to access Customers {1} invoices.{2}", item.ToString, customerId, Environment.NewLine)]</InArgument>
+                                      </Assign.Value>
+                                    </Assign>
+                                  </FlowStep>
+                                </FlowDecision.False>
+                              </FlowDecision>
+                            </FlowStep.Next>
+                          </FlowStep>
                         </FlowDecision.True>
                         <FlowDecision.False>
                           <FlowStep x:Name="__ReferenceID1" sap2010:WorkflowViewState.IdRef="FlowStep_52">
@@ -248,6 +262,7 @@
                 <x:Reference>__ReferenceID3</x:Reference>
                 <x:Reference>__ReferenceID4</x:Reference>
                 <x:Reference>__ReferenceID5</x:Reference>
+                <x:Reference>__ReferenceID6</x:Reference>
               </Flowchart>
             </Sequence>
           </ActivityAction>
@@ -255,7 +270,7 @@
       </ui:ForEach>
     </Sequence>
     <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_5" Text="Finished checking saved invoices." />
-    <sads:DebugSymbol.Symbol>dzdDOlxVc2Vyc1xrZXJtaXRcRGVza3RvcFxQUk9KRUNUXENoZWNrU2F2ZWRJbnZvaWNlcy54YW1sLQGqAQG+AQEDAW0BgQEBAo8BA4MCDgIBAZQBBZQBgQECATqVAQWAAhACAQSBAgWBAoIBAgEClAFclAF+AgE7lgEHnQEQAgE2ngEHpQEQAgEypgEHrgEQAgEurwEHvgEUAgEkvwEH/wEUAgEFgQJcgQJ/AgEDmwE0mwFfAgE5mAE1mAE8AgE3owFMowFvAgE1oAFNoAFcAgEzqwE8qwFRAgExqAE9qAFKAgEvrwHSAa8B2wECASy1AQ27ARgCASW/AcgBvwHYAQIBIsUBDfwBGAIBBrgBPrgBRAIBJroBD7oBqAMCASfGAQ/7ARsCAQe6AbUCugGlAwIBK7oBVboBZgIBKboBwQG6Aa4CAgEozQEVzQGOAgIBGc8BR88BVwIBF+cBHe4BJgIBE9EBS9EBfwIBEtkBIeABKgIBDtQBIdQBnQICAQjNAf0BzQGLAgIBIM0BXc0BbgIBHs0B5gHNAfYBAgEczQHNAc0B3gECARrsAUjsAasBAgEW6QFJ6QFXAgEU3gFM3gGBAgIBEdsBTdsBWwIBD9QBWNQBZwIBDNQB0QHUAZoCAgEJ</sads:DebugSymbol.Symbol>
+    <sads:DebugSymbol.Symbol>d0FDOlxVc2Vyc1xrZXJtaXRcRG9jdW1lbnRzXFVpUGF0aFxJbnZvaWNlc1xDaGVja1NhdmVkSW52b2ljZXMueGFtbDMBqgEBvgEBAwFtAYEBAQKRAQOSAg4CAQGWAQWWAYEBAgFElwEFjwIQAgEEkAIFkAKCAQIBApYBXJYBfgIBRZgBB58BEAIBQKABB6cBEAIBPKgBB68BEAIBOLABB7cBEAIBNLgBB8cBFAIBKsgBB44CFAIBBZACXJACfwIBA50BNJ0BXwIBQ5oBNZoBPAIBQaUBTKUBbwIBP6IBTaIBXAIBPa0BPK0BUQIBO6oBPaoBSgIBObUBPLUBUQIBN7IBPbIBTQIBNbgB0gG4AdsBAgEyvgENxAEYAgEryAHIAcgB2AECASjOAQ2LAhgCAQbBAT7BAUQCASzDAQ/DAagDAgEtzwEPigIbAgEHwwG1AsMBpQMCATHDAVXDAWYCAS/DAcEBwwGuAgIBLtYBFdYBjgICAR/YAUfYAVcCAR31AR38ASYCARnbAR3bAfMCAgET3QFP3QGZAQIBEuUBJewBLgIBDuABJeAB+AICAQjWAf0B1gGLAgIBJtYBXdYBbgIBJNYB5gHWAfYBAgEi1gHNAdYB3gECASD6AUj6AasBAgEc9wFJ9wFXAgEa2wGrAdsBvQECARfbAacC2wHwAgIBFOoBUOoBhQICARHnAVHnAV8CAQ/gAbMB4AHCAQIBDOABrALgAfUCAgEJ</sads:DebugSymbol.Symbol>
   </Sequence>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
@@ -269,6 +284,7 @@
       <sap2010:ViewStateData Id="Assign_43" sap:VirtualizedContainerService.HintSize="652,60" />
       <sap2010:ViewStateData Id="Assign_48" sap:VirtualizedContainerService.HintSize="652,60" />
       <sap2010:ViewStateData Id="Assign_53" sap:VirtualizedContainerService.HintSize="652,60" />
+      <sap2010:ViewStateData Id="Assign_54" sap:VirtualizedContainerService.HintSize="652,60" />
       <sap2010:ViewStateData Id="AddToDictionary`2_1" sap:VirtualizedContainerService.HintSize="378,138" />
       <sap2010:ViewStateData Id="Sequence_70" sap:VirtualizedContainerService.HintSize="400,262">
         <sap:WorkflowViewStateService.ViewState>
@@ -291,12 +307,25 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="AddToCollection`1_1" sap:VirtualizedContainerService.HintSize="200,22" />
+      <sap2010:ViewStateData Id="AddToCollection`1_2" sap:VirtualizedContainerService.HintSize="200,64">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="AddToCollection`1_1" sap:VirtualizedContainerService.HintSize="200,64">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="FlowStep_56">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">330,509</av:Point>
-            <av:Size x:Key="ShapeSize">200,22</av:Size>
+            <av:Point x:Key="ShapeLocation">330,559</av:Point>
+            <av:Size x:Key="ShapeSize">200,64</av:Size>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
@@ -310,7 +339,7 @@
       <sap2010:ViewStateData Id="FlowStep_55">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">319,380</av:Point>
+            <av:Point x:Key="ShapeLocation">319,460</av:Point>
             <av:Size x:Key="ShapeSize">242,60</av:Size>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
@@ -319,10 +348,19 @@
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
-            <av:Point x:Key="ShapeLocation">40,366.5</av:Point>
+            <av:Point x:Key="ShapeLocation">40,446.5</av:Point>
             <av:Size x:Key="ShapeSize">160,87</av:Size>
-            <av:PointCollection x:Key="FalseConnector">200,410 319,410</av:PointCollection>
-            <av:PointCollection x:Key="TrueConnector">40,410 10,410 10,520 330,520</av:PointCollection>
+            <av:PointCollection x:Key="FalseConnector">200,490 319,490</av:PointCollection>
+            <av:PointCollection x:Key="TrueConnector">40,490 10,490 10,591 330,591</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_57">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">20,349</av:Point>
+            <av:Size x:Key="ShapeSize">200,64</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">120,413 120,446.5</av:PointCollection>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
@@ -348,7 +386,7 @@
             <av:Point x:Key="ShapeLocation">147,226.5</av:Point>
             <av:Size x:Key="ShapeSize">86,87</av:Size>
             <av:PointCollection x:Key="FalseConnector">233,270 319,270</av:PointCollection>
-            <av:PointCollection x:Key="TrueConnector">147,270 120,270 120,366.5</av:PointCollection>
+            <av:PointCollection x:Key="TrueConnector">147,270 120,270 120,349</av:PointCollection>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
@@ -361,7 +399,7 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Flowchart_2" sap:VirtualizedContainerService.HintSize="614,636">
+      <sap2010:ViewStateData Id="Flowchart_2" sap:VirtualizedContainerService.HintSize="614,659">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
@@ -369,24 +407,25 @@
             <av:Point x:Key="ShapeLocation">270,2.5</av:Point>
             <av:Size x:Key="ShapeSize">60,75</av:Size>
             <av:PointCollection x:Key="ConnectorLocation">300,77.5 300,105</av:PointCollection>
+            <x:Double x:Key="Height">623</x:Double>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Sequence_71" sap:VirtualizedContainerService.HintSize="636,760">
+      <sap2010:ViewStateData Id="Sequence_71" sap:VirtualizedContainerService.HintSize="636,783">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="ForEach`1_3" sap:VirtualizedContainerService.HintSize="652,921">
+      <sap2010:ViewStateData Id="ForEach`1_3" sap:VirtualizedContainerService.HintSize="652,944">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Sequence_65" sap:VirtualizedContainerService.HintSize="674,1808">
+      <sap2010:ViewStateData Id="Sequence_65" sap:VirtualizedContainerService.HintSize="674,1931">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
@@ -400,7 +439,7 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Sequence_66" sap:VirtualizedContainerService.HintSize="696,2134">
+      <sap2010:ViewStateData Id="Sequence_66" sap:VirtualizedContainerService.HintSize="696,2257">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -408,7 +447,7 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="CheckSavedInvoices_1" sap:VirtualizedContainerService.HintSize="736,2254" />
+      <sap2010:ViewStateData Id="CheckSavedInvoices_1" sap:VirtualizedContainerService.HintSize="736,2457" />
     </sap2010:ViewStateManager>
   </sap2010:WorkflowViewState.ViewStateManager>
 </Activity>

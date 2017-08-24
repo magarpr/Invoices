@@ -332,6 +332,24 @@
                       </ui:SendHotkey>
                     </Sequence>
                     <Sequence DisplayName="Generate Invoices" sap2010:WorkflowViewState.IdRef="Sequence_150">
+                      <Sequence.Variables>
+                        <Variable x:TypeArguments="x:Boolean" Name="selectAllFound" />
+                      </Sequence.Variables>
+                      <ui:UiElementExists DisplayName="Element Exists" Exists="[selectAllFound]" sap2010:WorkflowViewState.IdRef="UiElementExists_1">
+                        <ui:UiElementExists.Target>
+                          <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" InformativeScreenshot="e726d68582d613ada64829d1d1a11b24" Selector="&lt;wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' title='Output from Billing' /&gt;&lt;wnd aaname='Select All' cls='Button' /&gt;" TimeoutMS="3000" WaitForReady="COMPLETE" />
+                        </ui:UiElementExists.Target>
+                      </ui:UiElementExists>
+                      <If sap2010:Annotation.AnnotationText="If select all button was not found, there are no inovices or they are blocked for export. Throw error" Condition="[Not selectAllFound]" sap2010:WorkflowViewState.IdRef="If_10">
+                        <If.Then>
+                          <Sequence sap2010:WorkflowViewState.IdRef="Sequence_176">
+                            <Sequence.Variables>
+                              <Variable x:TypeArguments="s:Exception" Name="kreditException" />
+                            </Sequence.Variables>
+                            <Throw Exception="[new Exception(&quot;Kredit: Invoices were not found in SAP&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_2" />
+                          </Sequence>
+                        </If.Then>
+                      </If>
                       <ui:SendHotkey DelayBefore="{x:Null}" DelayBetweenKeys="{x:Null}" DelayMS="{x:Null}" Activate="True" ClickBeforeTyping="False" DisplayName="Select All Invoices" EmptyField="False" sap2010:WorkflowViewState.IdRef="SendHotkey_71" Key="f5" KeyModifiers="None" SendWindowMessages="True" SpecialKey="True">
                         <ui:SendHotkey.Target>
                           <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" TimeoutMS="{x:Null}" InformativeScreenshot="9ad43567a45eafd116ca94012794fe24" Selector="&lt;wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' title='Output from Billing' /&gt;&lt;wnd aaname='Select All' cls='Button' /&gt;" WaitForReady="INTERACTIVE" />
@@ -540,11 +558,11 @@
       </TryCatch.Finally>
     </TryCatch>
     <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_9" Text="Finished SAP process" />
-    <sads:DebugSymbol.Symbol>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</sads:DebugSymbol.Symbol>
+    <sads:DebugSymbol.Symbol>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</sads:DebugSymbol.Symbol>
   </Sequence>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
-      <sap2010:ViewStateData Id="WriteLine_8" sap:VirtualizedContainerService.HintSize="476,61" />
+      <sap2010:ViewStateData Id="WriteLine_8" sap:VirtualizedContainerService.HintSize="418,61" />
       <sap2010:ViewStateData Id="StartProcess_3" sap:VirtualizedContainerService.HintSize="314,87" />
       <sap2010:ViewStateData Id="WaitUiElementAppear_5" sap:VirtualizedContainerService.HintSize="314,106">
         <sap:WorkflowViewStateService.ViewState>
@@ -616,7 +634,7 @@
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="WindowScope_11" sap:VirtualizedContainerService.HintSize="414,1082" />
-      <sap2010:ViewStateData Id="Sequence_140" sap:VirtualizedContainerService.HintSize="436,2092">
+      <sap2010:ViewStateData Id="Sequence_140" sap:VirtualizedContainerService.HintSize="314,78">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -649,7 +667,7 @@
       <sap2010:ViewStateData Id="SetToClipboard_4" sap:VirtualizedContainerService.HintSize="314,59" />
       <sap2010:ViewStateData Id="Click_13" sap:VirtualizedContainerService.HintSize="314,106" />
       <sap2010:ViewStateData Id="Click_14" sap:VirtualizedContainerService.HintSize="314,106" />
-      <sap2010:ViewStateData Id="Sequence_143" sap:VirtualizedContainerService.HintSize="336,649">
+      <sap2010:ViewStateData Id="Sequence_143" sap:VirtualizedContainerService.HintSize="200,51">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -670,8 +688,24 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="SendHotkey_71" sap:VirtualizedContainerService.HintSize="314,154" />
-      <sap2010:ViewStateData Id="SendHotkey_72" sap:VirtualizedContainerService.HintSize="314,154" />
+      <sap2010:ViewStateData Id="UiElementExists_1" sap:VirtualizedContainerService.HintSize="464,106" />
+      <sap2010:ViewStateData Id="Throw_2" sap:VirtualizedContainerService.HintSize="200,22" />
+      <sap2010:ViewStateData Id="Sequence_176" sap:VirtualizedContainerService.HintSize="222,146">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="If_10" sap:VirtualizedContainerService.HintSize="464,336">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="SendHotkey_71" sap:VirtualizedContainerService.HintSize="464,154" />
+      <sap2010:ViewStateData Id="SendHotkey_72" sap:VirtualizedContainerService.HintSize="464,154" />
       <sap2010:ViewStateData Id="GetVisibleText_9" sap:VirtualizedContainerService.HintSize="314,106" />
       <sap2010:ViewStateData Id="Sequence_145" sap:VirtualizedContainerService.HintSize="336,230">
         <sap:WorkflowViewStateService.ViewState>
@@ -709,7 +743,7 @@
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="SendHotkey_76" sap:VirtualizedContainerService.HintSize="414,154" />
-      <sap2010:ViewStateData Id="Sequence_148" sap:VirtualizedContainerService.HintSize="314,51">
+      <sap2010:ViewStateData Id="Sequence_148" sap:VirtualizedContainerService.HintSize="464,51">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -717,9 +751,9 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="SendHotkey_80" sap:VirtualizedContainerService.HintSize="314,154" />
-      <sap2010:ViewStateData Id="WaitUiElementAppear_8" sap:VirtualizedContainerService.HintSize="314,106" />
-      <sap2010:ViewStateData Id="Sequence_150" sap:VirtualizedContainerService.HintSize="200,51">
+      <sap2010:ViewStateData Id="SendHotkey_80" sap:VirtualizedContainerService.HintSize="464,154" />
+      <sap2010:ViewStateData Id="WaitUiElementAppear_8" sap:VirtualizedContainerService.HintSize="464,106" />
+      <sap2010:ViewStateData Id="Sequence_150" sap:VirtualizedContainerService.HintSize="486,1425">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -734,7 +768,7 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="WindowScope_12" sap:VirtualizedContainerService.HintSize="504,647" />
+      <sap2010:ViewStateData Id="WindowScope_12" sap:VirtualizedContainerService.HintSize="414,647" />
       <sap2010:ViewStateData Id="InvokeWorkflowFile_1" sap:VirtualizedContainerService.HintSize="482,114">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
@@ -780,7 +814,7 @@
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="TryCatch_2" sap:VirtualizedContainerService.HintSize="482,1575" />
-      <sap2010:ViewStateData Id="Sequence_175" sap:VirtualizedContainerService.HintSize="504,1880">
+      <sap2010:ViewStateData Id="Sequence_175" sap:VirtualizedContainerService.HintSize="414,93">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -789,7 +823,7 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Sequence_151" sap:VirtualizedContainerService.HintSize="314,93">
+      <sap2010:ViewStateData Id="Sequence_151" sap:VirtualizedContainerService.HintSize="436,931">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -844,16 +878,16 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="TryCatch_1" sap:VirtualizedContainerService.HintSize="476,968" />
-      <sap2010:ViewStateData Id="WriteLine_9" sap:VirtualizedContainerService.HintSize="476,61" />
-      <sap2010:ViewStateData Id="Sequence_154" sap:VirtualizedContainerService.HintSize="498,1294">
+      <sap2010:ViewStateData Id="TryCatch_1" sap:VirtualizedContainerService.HintSize="418,822" />
+      <sap2010:ViewStateData Id="WriteLine_9" sap:VirtualizedContainerService.HintSize="418,61" />
+      <sap2010:ViewStateData Id="Sequence_154" sap:VirtualizedContainerService.HintSize="440,1148">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="SAPSendInvocies_1" sap:VirtualizedContainerService.HintSize="538,1934" />
+      <sap2010:ViewStateData Id="SAPSendInvocies_1" sap:VirtualizedContainerService.HintSize="480,1228" />
     </sap2010:ViewStateManager>
   </sap2010:WorkflowViewState.ViewStateManager>
 </Activity>

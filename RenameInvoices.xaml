@@ -119,7 +119,7 @@
                     <OutArgument x:TypeArguments="x:String">[customerNo]</OutArgument>
                   </Assign.To>
                   <Assign.Value>
-                    <InArgument x:TypeArguments="x:String">[pdfText.Substring(pdfText.IndexOf("Kundenummer:") + 12).Trim]</InArgument>
+                    <InArgument x:TypeArguments="x:String">[pdfText.Substring(pdfText.IndexOf("Fakturakonto:") + 13).Trim]</InArgument>
                   </Assign.Value>
                 </Assign>
                 <Assign sap2010:WorkflowViewState.IdRef="Assign_8">
@@ -139,7 +139,7 @@
       </ui:ForEach.Body>
     </ui:ForEach>
     <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_3" Text="Finished renaming invoices" />
-    <sads:DebugSymbol.Symbol>dzNDOlxVc2Vyc1xrZXJtaXRcRGVza3RvcFxQUk9KRUNUXFJlbmFtZUludm9pY2VzLnhhbWwlAWIBhAEBAkUDjwEOAgEBSQVJegIBM0oFUQ4CAS9SBYwBEgIBBI0BBY0BewIBAklcSXcCATRPMk9aAgEyTDNMOgIBMFJ4UoEBAgEtWAuJARYCAQWNAVyNAXgCAQNbPFtCAgEGXQ2GARgCARCHAQ2HAYMCAgEJiAENiAGLAgIBB2EPYZoBAgEnYg9zGgIBHHQPhQEaAgERhwFBhwGVAQIBDIcB+AGHAYACAgEKiAFkiAGIAgIBCGGMAWGXAQIBK2FEYUwCASlhgwFhhgECAShjEWoaAgEhaxFyGgIBHXURfBoCARZ9EYQBGgIBEmg8aHQCASRlPWVIAgEicDxwgQECASBtPW1IAgEeejx6egIBGXc9d0kCAReCATyCAYMBAgEVfz1/SQIBEw==</sads:DebugSymbol.Symbol>
+    <sads:DebugSymbol.Symbol>dz1DOlxVc2Vyc1xrZXJtaXRcRG9jdW1lbnRzXFVpUGF0aFxJbnZvaWNlc1xSZW5hbWVJbnZvaWNlcy54YW1sJQFiAYQBAQJFA48BDgIBAUkFSXoCATNKBVEOAgEvUgWMARICAQSNAQWNAXsCAQJJXEl3AgE0TzJPWgIBMkwzTDoCATBSeFKBAQIBLVgLiQEWAgEFjQFcjQF4AgEDWzxbQgIBBl0NhgEYAgEQhwENhwGDAgIBCYgBDYgBiwICAQdhD2GaAQIBJ2IPcxoCARx0D4UBGgIBEYcBQYcBlQECAQyHAfgBhwGAAgIBCogBZIgBiAICAQhhjAFhlwECASthRGFMAgEpYYMBYYYBAgEoYxFqGgIBIWsRchoCAR11EXwaAgEWfRGEARoCARJoPGh0AgEkZT1lSAIBInA8cIEBAgEgbT1tSAIBHno8ensCARl3PXdJAgEXggE8ggGDAQIBFX89f0kCARM=</sads:DebugSymbol.Symbol>
   </Sequence>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
@@ -159,7 +159,7 @@
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="Assign_7" sap:VirtualizedContainerService.HintSize="242,60" />
       <sap2010:ViewStateData Id="Assign_8" sap:VirtualizedContainerService.HintSize="242,60" />
-      <sap2010:ViewStateData Id="Sequence_157" sap:VirtualizedContainerService.HintSize="314,78">
+      <sap2010:ViewStateData Id="Sequence_157" sap:VirtualizedContainerService.HintSize="264,311">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -168,7 +168,7 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="Sequence_150" sap:VirtualizedContainerService.HintSize="210,108">
+      <sap2010:ViewStateData Id="Sequence_150" sap:VirtualizedContainerService.HintSize="336,462">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -195,7 +195,7 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="RenameInvoices_1" sap:VirtualizedContainerService.HintSize="349,1275" />
+      <sap2010:ViewStateData Id="RenameInvoices_1" sap:VirtualizedContainerService.HintSize="349,1035" />
     </sap2010:ViewStateManager>
   </sap2010:WorkflowViewState.ViewStateManager>
 </Activity>
