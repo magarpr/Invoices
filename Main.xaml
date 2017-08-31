@@ -114,7 +114,7 @@
             <TryCatch.Try>
               <Sequence sap2010:WorkflowViewState.IdRef="Sequence_3">
                 <ui:ReadTextFile Content="[settingsString]" DisplayName="Read Json file" FileName="settings.json" sap2010:WorkflowViewState.IdRef="ReadTextFile_1" />
-                <ui:DeserializeJson x:TypeArguments="njl:JObject" DisplayName="Deserialize json" sap2010:WorkflowViewState.IdRef="DeserializeJson`1_1" JsonObject="[settingsJson]" JsonString="[settingsString]" />
+                <ui:DeserializeJson x:TypeArguments="njl:JObject" DisplayName="Deserialize json" sap2010:WorkflowViewState.IdRef="DeserializeJson`1_1" JsonObject="[settingsJson]" JsonString="[settingsString]" xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger" />
                 <Assign sap2010:WorkflowViewState.IdRef="Assign_1">
                   <Assign.To>
                     <OutArgument x:TypeArguments="x:String">[mailFolder]</OutArgument>
@@ -521,7 +521,7 @@
     <x:Reference>__ReferenceID8</x:Reference>
     <x:Reference>__ReferenceID9</x:Reference>
     <x:Reference>__ReferenceID10</x:Reference>
-    <sads:DebugSymbol.Symbol>dzNDOlxVc2Vyc1xrZXJtaXRcRG9jdW1lbnRzXFVpUGF0aFxJbnZvaWNlc1xNYWluLnhhbWzIAUcDjQQPAgEBXgteOgIBA2MLYzoCAQJsCaYCFAMBvgGpAg2pAsQEAwG1AasCcKsCjwEDAbMB+AMV+gMgAwGwAa4CFb0DIAIBMcADGe4DJQIBBHELpQIWAwG/AakCvgSpAsEEAwG9AakCRakCVAMBuwGpAsUBqQKFAwMBugGpAo4EqQKeBAMBuAGpAuQDqQLyAwMBtgH5Axf5A14DAbEBsQJPsQJkAgE0sgJPsgJkAgEztAJQtAJnAgEyuAIXvAMiAgE1wgNNwgNqAgEv5AMj5APwAQIBKMQDUcQDhgECASbTAyfdAzICARTHAyfOAzICAQVzD44CGgMBywGWAhOhAh4DAcAB+QMn+QMxAwGyAboCG5oDJgIBSLEDG7oDJgIBQKIDH6wDKgIBNuQDQuQDUQIBLeQD5AHkA+0BAgEr5APAAeQD1wECASnUAynbA0ECARzcAyncA/IBAgEVyAMpzAM+AgENzQMpzQP2AQIBBnQRdKYBAwGdAnURddQBAwGYAnYRfRoDAZQCfhGFARoDAZAChgERjQEaAwGMAo4BEZUBGgMBiAKWARGdARoDAYQCngERpQEaAwGAAqYBEa0BGgMB/AGuARG1ARoDAfgBtgERvQEaAwH0Ab4BEcUBGgMB8AHGARHNARoDAewBzgER1QEaAwHoAdYBEd0BGgMB5AHeARHlARoDAeAB5gER7QEaAwHcAe4BEfUBGgMB2AH2ARH9ARoDAdQB/gERhQIaAwHQAYYCEY0CGgMBzAGXAhWeAh4DAcYBnwIVnwKdAgMBxAGgAhWgAn0DAcEBuwIduwKoAQMBrgG8Ah3DAiYDAaoBxAIdzQIoAwGfAc4CHZkDKAIBSbIDHbgDKAIBQ7kDHbkDqQECAUGjAyGqAyoCATurAyGrA9MBAgE32ANu2AN7AgEk1gNt1gN/AgEi2QNo2QN1AgEg1APfAdQD8wECAR/XA2vXA3ICAR3cA0jcA1cCARrcA+YB3APvAQIBGNwDxgHcA9kBAgEWyAO2BcgDzAUCARLIA/gDyAOHBAIBEMgDkAHIA/QDAgEPyAOPBcgDsgUCAQ7NA0jNA1cCAQvNA+oBzQPzAQIBCc0DxgHNA90BAgEHdGN0cgMBoAJ0KnQ8AwGeAnW/AXXRAQMBmwJ1owF1swEDAZkCezx7bAMBlwJ4PXhJAwGVAoMBPIMBbQMBkwKAAT2AAUoDAZECiwE8iwF0AwGPAogBPYgBUQMBjQKTATyTAW8DAYsCkAE9kAFMAwGJApsBO5sBdgMBhwKYATyYAU0DAYUCowE7owF3AwGDAqABPKABTgMBgQKrATyrAWsDAf8BqAE9qAFIAwH9AbMBPLMBaQMB+wGwAT2wAUYDAfkBuwE8uwFtAwH3AbgBPbgBSgMB9QHDATzDAWwDAfMBwAE9wAFJAwHxAcsBPMsBdgMB7wHIAT3IAVMDAe0B0wE80wFuAwHrAdABPdABSwMB6QHbATzbAXQDAecB2AE92AFRAwHlAeMBPOMBdQMB4wHgAT3gAVIDAeEB6wE86wFxAwHfAegBPegBTgMB3QHzATzzAXIDAdsB8AE98AFPAwHZAfsBPPsBbQMB1wH4AT34AUoDAdUBgwI8gwJ4AwHTAYACPYACVQMB0QGLAjyLAngDAc8BiAI9iAJVAwHNAZwCQ5wCTgMByQGZAkSZAlEDAccBnwKDAZ8CmgIDAcUBoAJDoAJQAwHCAbsCiwG7AqUBAwGvAcECT8ECbgMBrQG+AlC+AlcDAasBxQIfzAI3AwGgAc8CH5gDJAIBSrMDH7cDNwIBRLkDiwG5A6YBAgFCqANPqANaAgE+pQNQpQNdAgE8qwOQAasD0AECATjJAmLJAnIDAagByAJiyAJyAwGmAccCX8cCZgMBpAHKAmnKAncDAaIBxQLbAcUC9gEDAaEBzwItzwKhAQIBS9ECI9gCLgMBlAHbAiOWAy4CAUy1A1m1A2cCAUazA8sBswPdAQIBRdICJdYCOgMBmAHXAiXXAskBAwGVAdwCJeUCMAMBiQHmAiXyAjACAXjzAiX5AjACAXP6AiWGAzACAWKHAyWVAzACAU3SAsUC0gLbAgMBnQHSApoB0gKoAQMBmwHSArAC0gLBAgMBmQHXApMB1wLGAQMBlgHdAifkAj8DAYoB5wIn8QI/AgF59AIn+AI/AgF0+wInhQM/AgFjiAMnlAM/AgFO4QJz4QKDAQMBkgHfAmjfAncDAZAB4gJv4gKDAQMBjgHdAuQB3QKAAgMBjQHgAmLgAnIDAYsB7QJs7QKCAQMBhwHuAmTuAnIDAYUB7wJp7wJ5AwGDAeoCX+oCaAMBgQHpAmHpAmwCAX/sAmLsAm4CAX3rAmPrAnACAXvnAt4B5wL0AQIBevYCZPYCcgIBdvQC3QH0AvIBAgF1/gJy/gKCAQIBcf8CZ/8CdQIBb4ADaIADdgIBbYIDdIIDhAECAWv9AnD9An4CAWmDA26DA4IBAgFngQNxgQN+AgFl+wLhAfsC+gECAWSNA22NA4EBAgFgiwNpiwN5AgFejANnjANuAgFcjwNnjwN1AgFaigNnigN1AgFYkQNvkQOHAQIBVpADc5ADgwECAVSOA3COA30CAVKIA9wBiAPvAQIBUZIDb5IDhwECAU8=</sads:DebugSymbol.Symbol>
+    <sads:DebugSymbol.Symbol>dzxDOlxVc2Vyc1xhaWRhcy5ub3J2YWlzYXNcRG9jdW1lbnRzXEdpdEh1YlxJbnZvaWNlc1xNYWluLnhhbWzFAUcDjQQPAgEBXgteOgIBA2MLYzoCAQJsCaYCFAMBvgGpAg2pAsQEAwG1AasCcKsCjwEDAbMB+AMV+gMgAwGwAa4CFb0DIAIBMcADGe4DJQIBBHELpQIWAwG/AakCvgSpAsEEAwG9AakCRakCVAMBuwGpAsUBqQKFAwMBugGpAo4EqQKeBAMBuAGpAuQDqQLyAwMBtgH5Axf5A14DAbEBsQJPsQJkAgE0sgJPsgJkAgEztAJQtAJnAgEyuAIXvAMiAgE1wgNNwgNqAgEv5AMj5APwAQIBKMQDUcQDhgECASbTAyfdAzICARTHAyfOAzICAQVzD44CGgMBywGWAhOhAh4DAcAB+QMn+QMxAwGyAboCG5oDJgIBSLEDG7oDJgIBQKIDH6wDKgIBNuQDQuQDUQIBLeQD5AHkA+0BAgEr5APAAeQD1wECASnUAynbA0ECARzcAyncA/IBAgEVyAMpzAM+AgENzQMpzQP2AQIBBnQRdKYBAwGZAnYRfRoDAZQCfhGFARoDAZAChgERjQEaAwGMAo4BEZUBGgMBiAKWARGdARoDAYQCngERpQEaAwGAAqYBEa0BGgMB/AGuARG1ARoDAfgBtgERvQEaAwH0Ab4BEcUBGgMB8AHGARHNARoDAewBzgER1QEaAwHoAdYBEd0BGgMB5AHeARHlARoDAeAB5gER7QEaAwHcAe4BEfUBGgMB2AH2ARH9ARoDAdQB/gERhQIaAwHQAYYCEY0CGgMBzAGXAhWeAh4DAcYBnwIVnwKdAgMBxAGgAhWgAn0DAcEBuwIduwKoAQMBrgG8Ah3DAiYDAaoBxAIdzQIoAwGfAc4CHZkDKAIBSbIDHbgDKAIBQ7kDHbkDqQECAUGjAyGqAyoCATurAyGrA9MBAgE32ANu2AN7AgEk1gNt1gN/AgEi2QNo2QN1AgEg1APfAdQD8wECAR/XA2vXA3ICAR3cA0jcA1cCARrcA+YB3APvAQIBGNwDxgHcA9kBAgEWyAO2BcgDzAUCARLIA/gDyAOHBAIBEMgDkAHIA/QDAgEPyAOPBcgDsgUCAQ7NA0jNA1cCAQvNA+oBzQPzAQIBCc0DxgHNA90BAgEHdGN0cgMBnAJ0KnQ8AwGaAns8e2wDAZcCeD14SQMBlQKDATyDAW0DAZMCgAE9gAFKAwGRAosBPIsBdAMBjwKIAT2IAVEDAY0CkwE8kwFvAwGLApABPZABTAMBiQKbATubAXYDAYcCmAE8mAFNAwGFAqMBO6MBdwMBgwKgATygAU4DAYECqwE8qwFrAwH/AagBPagBSAMB/QGzATyzAWkDAfsBsAE9sAFGAwH5AbsBPLsBbQMB9wG4AT24AUoDAfUBwwE8wwFsAwHzAcABPcABSQMB8QHLATzLAXYDAe8ByAE9yAFTAwHtAdMBPNMBbgMB6wHQAT3QAUsDAekB2wE82wF0AwHnAdgBPdgBUQMB5QHjATzjAXUDAeMB4AE94AFSAwHhAesBPOsBcQMB3wHoAT3oAU4DAd0B8wE88wFyAwHbAfABPfABTwMB2QH7ATz7AW0DAdcB+AE9+AFKAwHVAYMCPIMCeAMB0wGAAj2AAlUDAdEBiwI8iwJ4AwHPAYgCPYgCVQMBzQGcAkOcAk4DAckBmQJEmQJRAwHHAZ8CgwGfApoCAwHFAaACQ6ACUAMBwgG7AosBuwKlAQMBrwHBAk/BAm4DAa0BvgJQvgJXAwGrAcUCH8wCNwMBoAHPAh+YAyQCAUqzAx+3AzcCAUS5A4sBuQOmAQIBQqgDT6gDWgIBPqUDUKUDXQIBPKsDkAGrA9ABAgE4yQJiyQJyAwGoAcgCYsgCcgMBpgHHAl/HAmYDAaQBygJpygJ3AwGiAcUC2wHFAvYBAwGhAc8CLc8CoQECAUvRAiPYAi4DAZQB2wIjlgMuAgFMtQNZtQNnAgFGswPLAbMD3QECAUXSAiXWAjoDAZgB1wIl1wLJAQMBlQHcAiXlAjADAYkB5gIl8gIwAgF48wIl+QIwAgFz+gIlhgMwAgFihwMllQMwAgFN0gLFAtIC2wIDAZ0B0gKaAdICqAEDAZsB0gKwAtICwQIDAZkB1wKTAdcCxgEDAZYB3QIn5AI/AwGKAecCJ/ECPwIBefQCJ/gCPwIBdPsCJ4UDPwIBY4gDJ5QDPwIBTuECc+ECgwEDAZIB3wJo3wJ3AwGQAeICb+ICgwEDAY4B3QLkAd0CgAIDAY0B4AJi4AJyAwGLAe0CbO0CggEDAYcB7gJk7gJyAwGFAe8Cae8CeQMBgwHqAl/qAmgDAYEB6QJh6QJsAgF/7AJi7AJuAgF96wJj6wJwAgF75wLeAecC9AECAXr2AmT2AnICAXb0At0B9ALyAQIBdf4Ccv4CggECAXH/Amf/AnUCAW+AA2iAA3YCAW2CA3SCA4QBAgFr/QJw/QJ+AgFpgwNugwOCAQIBZ4EDcYEDfgIBZfsC4QH7AvoBAgFkjQNtjQOBAQIBYIsDaYsDeQIBXowDZ4wDbgIBXI8DZ48DdQIBWooDZ4oDdQIBWJEDb5EDhwECAVaQA3OQA4MBAgFUjgNwjgN9AgFSiAPcAYgD7wECAVGSA2+SA4cBAgFP</sads:DebugSymbol.Symbol>
   </Flowchart>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
@@ -718,7 +718,7 @@
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="TryCatch_9" sap:VirtualizedContainerService.HintSize="645,1808" />
-      <sap2010:ViewStateData Id="Sequence_45" sap:VirtualizedContainerService.HintSize="667,1959">
+      <sap2010:ViewStateData Id="Sequence_45" sap:VirtualizedContainerService.HintSize="200,108">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
@@ -833,9 +833,9 @@
       <sap2010:ViewStateData Id="FlowStep_9">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
-            <av:Point x:Key="ShapeLocation">550,354.5</av:Point>
+            <av:Point x:Key="ShapeLocation">540,354.5</av:Point>
             <av:Size x:Key="ShapeSize">200,51</av:Size>
-            <av:PointCollection x:Key="ConnectorLocation">650,354.5 650,310 510,310</av:PointCollection>
+            <av:PointCollection x:Key="ConnectorLocation">640,354.5 640,310 510,310</av:PointCollection>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
@@ -845,7 +845,7 @@
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
             <av:Point x:Key="ShapeLocation">347,403</av:Point>
             <av:Size x:Key="ShapeSize">126,114</av:Size>
-            <av:PointCollection x:Key="FalseConnector">473,460 650,460 650,405.5</av:PointCollection>
+            <av:PointCollection x:Key="FalseConnector">473,460 640,460 640,405.5</av:PointCollection>
             <av:PointCollection x:Key="TrueConnector">347,460 230,460</av:PointCollection>
             <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
           </scg:Dictionary>
