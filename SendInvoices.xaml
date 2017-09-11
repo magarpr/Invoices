@@ -125,6 +125,9 @@
     <If sap2010:Annotation.AnnotationText="Checking if there were no errors while checking saved invoices" Condition="[String.IsNullOrEmpty(errorMessage)]" sap2010:WorkflowViewState.IdRef="If_3">
       <If.Then>
         <Sequence sap2010:WorkflowViewState.IdRef="Sequence_82">
+          <Sequence.Variables>
+            <Variable x:TypeArguments="x:String" Name="logSentInvoices" />
+          </Sequence.Variables>
           <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_10" Text="Started sending mail to a Client" />
           <Sequence DisplayName="Send Invoices to a Client" sap2010:WorkflowViewState.IdRef="Sequence_83">
             <Sequence.Variables>
@@ -154,6 +157,14 @@
               </Assign.To>
               <Assign.Value>
                 <InArgument x:TypeArguments="x:String">[mailTemplate]</InArgument>
+              </Assign.Value>
+            </Assign>
+            <Assign sap2010:WorkflowViewState.IdRef="Assign_66">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:String">[logSentInvoices]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:String">["Invoices sent to: "+ToEmailAddress+" - "]</InArgument>
               </Assign.Value>
             </Assign>
             <ui:ForEach x:TypeArguments="x:String" DisplayName="For each" sap2010:WorkflowViewState.IdRef="ForEach`1_1" Values="[FilesToSend]">
@@ -191,6 +202,14 @@
                       </InvokeMethod.TargetObject>
                       <InArgument x:TypeArguments="snm:Attachment">[attachment]</InArgument>
                     </InvokeMethod>
+                    <Assign sap2010:WorkflowViewState.IdRef="Assign_67">
+                      <Assign.To>
+                        <OutArgument x:TypeArguments="x:String">[logSentInvoices]</OutArgument>
+                      </Assign.To>
+                      <Assign.Value>
+                        <InArgument x:TypeArguments="x:String">[String.Concat(logSentInvoices,renamedAttachment, ", ")]</InArgument>
+                      </Assign.Value>
+                    </Assign>
                   </Sequence>
                 </ActivityAction>
               </ui:ForEach.Body>
@@ -207,6 +226,7 @@
             </InvokeMethod>
           </Sequence>
           <WriteLine DisplayName="Write line" sap2010:WorkflowViewState.IdRef="WriteLine_12" Text="Finished sending mail to a Client" />
+          <ui:LogMessage DisplayName="Log message" sap2010:WorkflowViewState.IdRef="LogMessage_33" Level="Info" Message="[logSentInvoices]" />
         </Sequence>
       </If.Then>
       <If.Else>
@@ -306,7 +326,7 @@
         </Sequence>
       </If.Else>
     </If>
-    <sads:DebugSymbol.Symbol>dztDOlxVc2Vyc1xrZXJtaXRcRG9jdW1lbnRzXFVpUGF0aFxJbnZvaWNlc1xTZW5kSW52b2ljZXMueGFtbFp8A7YCDgIBAX0FtAIKAgECfXZ9nAECAQN/CdIBFAIBSdUBCbICFAIBBYABC4ABiAEDAYIBgQEL0AEWAgFM0QEL0QGJAQIBStkBC9kBiQECAUfaAQvaAYwBAgFE2wELpQIWAgEUpgILsAIWAgEIsQILsQKKAQIBBoABY4ABhQEDAYMBhgENhgGuAQIBfYcBDY4BFgIBeY8BDZYBFgIBdZcBDZ4BFgIBcJ8BDcUBGgIBVcYBDcoBIgIBUMsBDc8BHAIBTdEBY9EBhgECAUvZAWLZAYYBAgFI2gF52gGJAQIBRdwBDeMBFgIBQOQBDesBFgIBPOwBDfMBFgIBOPQBDZoCGgIBHZsCDZ8CIgIBGKACDaQCHAIBFaoCDaoCrgECAQ+rAg2vAiICAQmxAmKxAocBAgEHhgFihgF6AwGAAYYBJoYBNgIBfowBP4wBUgIBfIkBQIkBTQIBepQBOJQBUAIBeJEBOZEBTgIBdpwBOJwBRgIBc5kBOZkBSwIBcZ8BgAGfAY8BAgFupQETwgEeAgFWxgGnAsYBuQICAVPGAZQCxgGjAgIBUc0BP80BTAIBTuEBP+EBUgIBQ94BQN4BTAIBQekBOOkBWQIBP+YBOeYBTQIBPfEBOPEBxQICATvuATnuAUoCATn0AYAB9AGSAQIBNvoBE5cCHgIBHpsCpgKbArwCAgEbmwKUApsCogICARmiAj+iAksCARaqAmKqAnoCARKqAiaqAjYCARCrAqgCqwK6AgIBDasCggGrApIBAgELqwKaAqsCpAICAQqqARWxAR4CAWqyARWyAYYCAgFjswEVugEeAgFfuwEVuwGmAQIBXLwBFcEBJAIBV/8BFYYCHgIBMocCFYcChgICASuIAhWPAh4CASeQAhWQAqYBAgEkkQIVlgIkAgEfrwFArwFpAgFtrAFBrAFUAgFrsgFJsgF9AgFnsgHcAbIBgwICAWS4AUa4AbABAgFitQFHtQFTAgFguwFtuwGjAQIBXb4BUL4BaQIBWsABRMABUAIBWIQCQIQCaQIBNYECQYECVAIBM4cCSYcCfQIBL4cC3AGHAoMCAgEsjQJGjQKwAQIBKooCR4oCUwIBKJACbZACowECASWTAlCTAmgCASKVAkSVAlACASA=</sads:DebugSymbol.Symbol>
+    <sads:DebugSymbol.Symbol>dzlDOlxQcm9ncmFtRGF0YVxVaVBhdGhcUHJvamVjdHNcSW52b2ljZXNcU2VuZEludm9pY2VzLnhhbWxifAPKAg4CAQF9BcgCCgIBAn12fZwBAgEDfwnmARQCAUnpAQnGAhQCAQWDAQuDAYgBAwGQAYQBC+MBFgIBT+QBC+QBiQECAU3lAQvlAY8BAgFK7QEL7QGJAQIBR+4BC+4BjAECAUTvAQu5AhYCARS6AgvEAhYCAQjFAgvFAooBAgEGgwFjgwGFAQMBkQGJAQ2JAa4BAwGLAYoBDZEBFgMBhwGSAQ2ZARYDAYMBmgENoQEWAgF+ogENqQEWAgF5qgEN2AEaAgFY2QEN3QEiAgFT3gEN4gEcAgFQ5AFj5AGGAQIBTuUBeeUBjAECAUvtAWLtAYYBAgFI7gF57gGJAQIBRfABDfcBFgIBQPgBDf8BFgIBPIACDYcCFgIBOIgCDa4CGgIBHa8CDbMCIgIBGLQCDbgCHAIBFb4CDb4CrgECAQ+/Ag3DAiICAQnFAmLFAocBAgEHiQFiiQF6AwGOAYkBJokBNgMBjAGPAT+PAVIDAYoBjAFAjAFNAwGIAZcBOJcBUAMBhgGUATmUAU4DAYQBnwE4nwFGAwGBAZwBOZwBSwIBf6cBOKcBYwIBfKQBOaQBSgIBeqoBgAGqAY8BAgF3sAET1QEeAgFZ2QGnAtkBuQICAVbZAZQC2QGjAgIBVOABP+ABTAIBUfUBP/UBUgIBQ/IBQPIBTAIBQf0BOP0BWQIBP/oBOfoBTQIBPYUCOIUCxQICATuCAjmCAkoCATmIAoABiAKSAQIBNo4CE6sCHgIBHq8CpgKvArwCAgEbrwKUAq8CogICARm2Aj+2AksCARa+AmK+AnoCARK+Aia+AjYCARC/AqgCvwK6AgIBDb8CggG/ApIBAgELvwKaAr8CpAICAQq1ARW8AR4CAXO9ARW9AYYCAgFsvgEVxQEeAgFoxgEVxgGmAQIBZccBFcwBJAIBYM0BFdQBHgIBWpMCFZoCHgIBMpsCFZsChgICASucAhWjAh4CASekAhWkAqYBAgEkpQIVqgIkAgEfugFAugFpAgF2twFBtwFUAgF0vQFJvQF9AgFwvQHcAb0BgwICAW3DAUbDAbABAgFrwAFHwAFTAgFpxgFtxgGjAQIBZskBUMkBaQIBY8sBRMsBUAIBYdIBQNIBeAIBXc8BQc8BUgIBW5gCQJgCaQIBNZUCQZUCVAIBM5sCSZsCfQIBL5sC3AGbAoMCAgEsoQJGoQKwAQIBKp4CR54CUwIBKKQCbaQCowECASWnAlCnAmgCASKpAkSpAlACASA=</sads:DebugSymbol.Symbol>
   </Sequence>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
@@ -315,22 +335,24 @@
       <sap2010:ViewStateData Id="Assign_53" sap:VirtualizedContainerService.HintSize="314,60" />
       <sap2010:ViewStateData Id="Assign_54" sap:VirtualizedContainerService.HintSize="314,60" />
       <sap2010:ViewStateData Id="Assign_55" sap:VirtualizedContainerService.HintSize="314,60" />
+      <sap2010:ViewStateData Id="Assign_66" sap:VirtualizedContainerService.HintSize="314,60" />
       <sap2010:ViewStateData Id="Assign_61" sap:VirtualizedContainerService.HintSize="242,60" />
       <sap2010:ViewStateData Id="MoveFile_1" sap:VirtualizedContainerService.HintSize="242,22" />
       <sap2010:ViewStateData Id="Assign_56" sap:VirtualizedContainerService.HintSize="242,60" />
       <sap2010:ViewStateData Id="WriteLine_13" sap:VirtualizedContainerService.HintSize="242,61" />
       <sap2010:ViewStateData Id="InvokeMethod_1" sap:VirtualizedContainerService.HintSize="242,132" />
-      <sap2010:ViewStateData Id="Sequence_84" sap:VirtualizedContainerService.HintSize="264,619">
+      <sap2010:ViewStateData Id="Assign_67" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Sequence_84" sap:VirtualizedContainerService.HintSize="264,719">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="ForEach`1_1" sap:VirtualizedContainerService.HintSize="314,753" />
+      <sap2010:ViewStateData Id="ForEach`1_1" sap:VirtualizedContainerService.HintSize="314,853" />
       <sap2010:ViewStateData Id="SendOutlookMail_7" sap:VirtualizedContainerService.HintSize="314,145" />
       <sap2010:ViewStateData Id="InvokeMethod_2" sap:VirtualizedContainerService.HintSize="314,132" />
-      <sap2010:ViewStateData Id="Sequence_83" sap:VirtualizedContainerService.HintSize="336,1633">
+      <sap2010:ViewStateData Id="Sequence_83" sap:VirtualizedContainerService.HintSize="336,1833">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
@@ -338,7 +360,8 @@
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="WriteLine_12" sap:VirtualizedContainerService.HintSize="336,61" />
-      <sap2010:ViewStateData Id="Sequence_82" sap:VirtualizedContainerService.HintSize="358,1959">
+      <sap2010:ViewStateData Id="LogMessage_33" sap:VirtualizedContainerService.HintSize="336,91" />
+      <sap2010:ViewStateData Id="Sequence_82" sap:VirtualizedContainerService.HintSize="358,2290">
         <sap:WorkflowViewStateService.ViewState>
           <scg:Dictionary x:TypeArguments="x:String, x:Object">
             <x:Boolean x:Key="IsExpanded">True</x:Boolean>
@@ -404,7 +427,7 @@
           </scg:Dictionary>
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
-      <sap2010:ViewStateData Id="SendInvoices_1" sap:VirtualizedContainerService.HintSize="803,2898" />
+      <sap2010:ViewStateData Id="SendInvoices_1" sap:VirtualizedContainerService.HintSize="803,2778" />
     </sap2010:ViewStateManager>
   </sap2010:WorkflowViewState.ViewStateManager>
 </Activity>
